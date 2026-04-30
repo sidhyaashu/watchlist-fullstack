@@ -12,8 +12,12 @@ class WatchlistRepository:
         self.db = db
 
     async def acquire_user_lock(self, user_id: UUID):
-        # Hash the UUID to a 32-bit integer for the transaction-level advisory lock
-        query = text("SELECT pg_advisory_xact_lock(hashtext(:user_id))")
+        # 64-bit safe hash for advisory lock
+        query = text("""
+            SELECT pg_advisory_xact_lock(
+                ('x' || substr(md5(:user_id), 1, 16))::bit(64)::bigint
+            )
+        """)
         await self.db.execute(query, {"user_id": str(user_id)})
 
     async def count_by_user(self, user_id: UUID) -> int:
@@ -33,8 +37,7 @@ class WatchlistRepository:
     async def create(self, user_id: UUID, name: str) -> Watchlist:
         watchlist = Watchlist(user_id=user_id, name=name)
         self.db.add(watchlist)
-        await self.db.commit()
-        await self.db.refresh(watchlist)
+        await self.db.flush()
         return watchlist
 
     async def get_by_user(
@@ -61,4 +64,4 @@ class WatchlistRepository:
         await self.db.execute(
             delete(Watchlist).where(Watchlist.id == watchlist_id)
         )
-        await self.db.commit()
+        await self.db.flush()

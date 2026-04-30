@@ -65,6 +65,35 @@ services:
     networks:
       - investcode_net
 
+  # ─── Watchlist Service ────────────────────────────────────────────
+  watchlist_service:
+    build:
+      context: ./watchlist_service
+      dockerfile: Dockerfile
+    container_name: watchlist_service
+    restart: always
+    # NOT exposed to host; only reachable via gateway inside docker network
+    expose:
+      - "8000"
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://postgres:password@db:5432/investcode
+      - REDIS_URL=redis://investcode_redis:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - investcode_net
+
   # ─── API Gateway ──────────────────────────────────────────────────
   api_gateway:
     build:
@@ -80,10 +109,13 @@ services:
     environment:
       - REDIS_URL=redis://investcode_redis:6379/0
       - AUTH_SERVICE_URL=http://auth_service:8000
+      - WATCHLIST_SERVICE_URL=http://watchlist_service:8000
     depends_on:
       redis:
         condition: service_healthy
       auth_service:
+        condition: service_healthy
+      watchlist_service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]

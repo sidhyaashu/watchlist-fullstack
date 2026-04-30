@@ -1,5 +1,5 @@
 import uuid
-from sqlalchemy import Column, String, Boolean, DateTime
+from sqlalchemy import Column, String, Boolean, DateTime, Index, text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.orm import relationship
@@ -9,6 +9,10 @@ from app.db.base import Base
 
 class Watchlist(Base):
     __tablename__ = "watchlists"
+
+    __table_args__ = (
+        Index('unique_user_watchlist_name', 'user_id', text('lower(name)'), unique=True),
+    )
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     

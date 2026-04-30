@@ -5,6 +5,7 @@ ROUTES = {
     "/api/v1/user": settings.AUTH_SERVICE_URL,
     "/api/v1/news": settings.NEWS_SERVICE_URL,
     "/api/v1/market": settings.MARKET_SERVICE_URL,
+    "/api/v1/watchlists": settings.WATCHLIST_SERVICE_URL,
 }
 
 

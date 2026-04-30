@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     AUTH_SERVICE_URL: str = "http://auth_service:8000"
     NEWS_SERVICE_URL: str = "http://news_service:8001"
     MARKET_SERVICE_URL: str = "http://market_service:8002"
+    WATCHLIST_SERVICE_URL: str = "http://watchlist_service:8003"
 
     # Client origin for CORS
     CLIENT_URL: str = "http://localhost:3000"
