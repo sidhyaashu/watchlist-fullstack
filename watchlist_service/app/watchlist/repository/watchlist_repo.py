@@ -3,27 +3,28 @@ from sqlalchemy import update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
-from app.models.watchlist import Watchlist
+from app.watchlist.models.watchlist import Watchlist
 
 
 class WatchlistRepository:
 
-    @staticmethod
-    async def create(db: AsyncSession, user_id: UUID, name: str) -> Watchlist:
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def create(self, user_id: UUID, name: str) -> Watchlist:
         watchlist = Watchlist(user_id=user_id, name=name)
-        db.add(watchlist)
-        await db.commit()
-        await db.refresh(watchlist)
+        self.db.add(watchlist)
+        await self.db.commit()
+        await self.db.refresh(watchlist)
         return watchlist
 
-    @staticmethod
     async def get_by_user(
-        db,
+        self,
         user_id,
         skip: int = 0,
         limit: int = 20
     ):
-        result = await db.execute(
+        result = await self.db.execute(
             select(Watchlist)
             .where(Watchlist.user_id == user_id)
             .offset(skip)
@@ -31,16 +32,14 @@ class WatchlistRepository:
         )
         return result.scalars().all()
 
-    @staticmethod
-    async def get_by_id(db: AsyncSession, watchlist_id: UUID):
-        result = await db.execute(
+    async def get_by_id(self, watchlist_id: UUID):
+        result = await self.db.execute(
             select(Watchlist).where(Watchlist.id == watchlist_id)
         )
         return result.scalar_one_or_none()
 
-    @staticmethod
-    async def delete(db: AsyncSession, watchlist_id: UUID):
-        await db.execute(
+    async def delete(self, watchlist_id: UUID):
+        await self.db.execute(
             delete(Watchlist).where(Watchlist.id == watchlist_id)
         )
-        await db.commit()
+        await self.db.commit()

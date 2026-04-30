@@ -19,8 +19,8 @@ load_dotenv(_service_root / ".env")
 
 # Import Base and all models so their tables are registered for autogenerate
 from app.db.base import Base  # noqa: F401
-import app.models.watchlist      # noqa: F401
-import app.models.watchlist_item  # noqa: F401
+import app.watchlist.models.watchlist      # noqa: F401
+import app.watchlist.models.watchlist_item  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

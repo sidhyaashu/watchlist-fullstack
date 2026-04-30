@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from app.api.v1.router import api_router
+from app.watchlist.api.routes import api_router as watchlist_router
 from app.core.exceptions import BaseAppException
 
 app = FastAPI(title="Watchlist Service")
@@ -13,7 +13,7 @@ async def app_exception_handler(request: Request, exc: BaseAppException):
         headers=exc.headers
     )
 
-app.include_router(api_router, prefix="/api/v1")
+app.include_router(watchlist_router, prefix="/api/v1")
 
 
 @app.get("/health")
