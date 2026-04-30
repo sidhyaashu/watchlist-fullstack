@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+sqlalchemy
+asyncpg
+greenlet
+PyJWT
+itsdangerous
+pydantic
+passlib[bcrypt]
+authlib
+httpx
+python-dotenv
+pydantic[email]
+alembic
+redis
+pydantic-settings

@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Docker / Infrastructure
+.git/
+.dockerignore
+docker-compose.yml
+Dockerfile
+
+# Metadata
+.vscode/
+.idea/
+.gemini/
+.pylintrc
+# Removed alembic/ and alembic.ini from ignore list to allow migrations
+report.md
+README.md
+
+# Logs
+*.log

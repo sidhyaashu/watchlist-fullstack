@@ -1,0 +1,33 @@
+
+services:
+  watchlist_db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: watchlist_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - watchlist_data:/var/lib/postgresql/data
+
+  watchlist_service:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql+asyncpg://postgres:password@watchlist_db:5432/watchlist_db
+      REDIS_URL: redis://watchlist_redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-your-secret-key-here}
+      ALGORITHM: HS256
+    depends_on:
+      - watchlist_db
+      - watchlist_redis
+
+  watchlist_redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  watchlist_data:
