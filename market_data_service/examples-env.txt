@@ -1,0 +1,16 @@
+# Database Credentials
+POSTGRES_USER=...
+POSTGRES_PASSWORD=...
+POSTGRES_DB=...
+
+DATABASE_URL=...
+
+# ETL Parameters
+ETL_BATCH_SIZE=5000
+ETL_BATCH_SLEEP=0
+ETL_RECREATE_SCHEMA=false
+PYTHONUNBUFFERED=1
+
+# Directory Paths
+SCHEMA_DIR=./schemas
+DATA_DIR=./data
