@@ -1,9 +1,0 @@
-services:
-  etl:
-    build: .
-    volumes:
-      - ./data:/app/data
-      - ./schemas:/app/schemas
-    env_file:
-      - .env
-    command: ["python", "-u", "etl.py"]
