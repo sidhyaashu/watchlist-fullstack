@@ -25,6 +25,9 @@ services:
     image: redis:7-alpine
     container_name: investcode_redis
     restart: always
+    # allkeys-lru: when maxmemory is hit, Redis evicts the least-recently-used keys.
+    # This means cache keys are silently dropped before user data — exactly what we want.
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
     ports:
       - "6379:6379"
     healthcheck:

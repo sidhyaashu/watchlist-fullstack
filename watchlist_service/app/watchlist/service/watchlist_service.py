@@ -49,23 +49,15 @@ class WatchlistService:
     async def get_user_watchlists(self, user_id: UUID, skip: int = 0, limit: int = 20) -> list[WatchlistResponse]:
         limit = min(limit, 100)
 
-        # 🔹 Cache-aside: pagination-aware key
-        cached = await WatchlistCache.get_list(user_id, skip, limit)
-        if cached is not None:
-            # Reconstruct Pydantic models from cached dicts — type-consistent output
-            return [WatchlistResponse.model_validate(w) for w in cached]
+        # 🔹 Stampede-protected cache-aside for the hottest endpoint.
+        # On expiry, only ONE request fetches from DB; others wait then read from cache.
+        async def _fetch() -> list[dict]:
+            async with self.repo.db.begin():
+                watchlists = await self.repo.get_by_user(user_id, skip, limit)
+                return [WatchlistResponse.model_validate(w).model_dump() for w in watchlists]
 
-        async with self.repo.db.begin():
-            watchlists = await self.repo.get_by_user(user_id, skip, limit)
-            response_models = [WatchlistResponse.model_validate(w) for w in watchlists]
-
-        # 🔹 Populate cache with serialized dicts
-        await WatchlistCache.set_list(
-            user_id, skip, limit,
-            [w.model_dump() for w in response_models]
-        )
-
-        return response_models
+        raw = await WatchlistCache.get_or_set_list(user_id, skip, limit, _fetch)
+        return [WatchlistResponse.model_validate(w) for w in raw]
 
     async def get_watchlist(self, user_id: UUID, watchlist_id: UUID) -> WatchlistResponse:
         # 🔹 Cache-aside: single watchlist detail
