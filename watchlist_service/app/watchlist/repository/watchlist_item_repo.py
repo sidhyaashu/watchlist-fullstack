@@ -11,7 +11,7 @@ class WatchlistItemRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def add_item(self, watchlist_id: UUID, data):
+    async def add_item(self, watchlist_id: UUID, data) -> WatchlistItem:
         item = WatchlistItem(
             watchlist_id=watchlist_id,
             instrument_id=data.instrument_id,
@@ -19,8 +19,7 @@ class WatchlistItemRepository:
             exchange=data.exchange,
         )
         self.db.add(item)
-        await self.db.commit()
-        await self.db.refresh(item)
+        await self.db.flush()  # push to DB within open transaction; no commit here
         return item
 
     async def count_items(self, watchlist_id: UUID) -> int:
@@ -34,7 +33,7 @@ class WatchlistItemRepository:
         watchlist_id: UUID,
         skip: int = 0,
         limit: int = 50
-    ):
+    ) -> list[WatchlistItem]:
         result = await self.db.execute(
             select(WatchlistItem)
             .where(WatchlistItem.watchlist_id == watchlist_id)
@@ -51,7 +50,7 @@ class WatchlistItemRepository:
                 WatchlistItem.instrument_id == instrument_id
             )
         )
-        await self.db.commit()
+        await self.db.flush()
 
     async def update_position(
         self,
@@ -67,14 +66,10 @@ class WatchlistItemRepository:
             )
             .values(position=position)
         )
-        await self.db.commit()
+        await self.db.flush()
 
-    async def batch_update_positions(
-        self,
-        watchlist_id: UUID,
-        updates: list
-    ):
-        """Efficiently update multiple positions in a single transaction."""
+    async def batch_update_positions(self, watchlist_id: UUID, updates: list):
+        """Efficiently update multiple positions within the caller's transaction."""
         for item in updates:
             await self.db.execute(
                 update(WatchlistItem)
@@ -84,4 +79,4 @@ class WatchlistItemRepository:
                 )
                 .values(position=item.position)
             )
-        await self.db.commit()
+        await self.db.flush()

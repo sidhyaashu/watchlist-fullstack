@@ -16,78 +16,99 @@ class WatchlistService:
 
     async def create_watchlist(self, user_id: UUID, name: str) -> WatchlistResponse:
         # 🔹 Input Validation
-        if not name or not name.strip():
-            logger.warning(f"User {user_id} attempted to create watchlist with empty name")
-            raise BadRequestException("Watchlist name cannot be empty")
-        
         name = name.strip()
+        if not name:
+            raise BadRequestException("Watchlist name cannot be empty")
 
-        # 🔹 Transaction Block
+        # 🔹 Wrap entire critical section in a single explicit transaction
+        # pg_advisory_xact_lock serializes concurrent creates for the same user.
+        # All DB ops are inside the transaction — lock is held until commit.
+        # Cache invalidation happens AFTER commit so we never serve stale data.
         async with self.repo.db.begin():
-            # Acquire advisory lock to serialize requests for this user
             await self.repo.acquire_user_lock(user_id)
 
-            # Check duplicate name
             existing_name = await self.repo.get_by_name(user_id, name)
             if existing_name:
-                logger.warning(f"User {user_id} attempted to create duplicate watchlist '{name}'")
-                raise BadRequestException(f"Watchlist with name '{name}' already exists")
+                raise BadRequestException(f"Watchlist '{name}' already exists")
 
-            # Check limit efficiently
             count = await self.repo.count_by_user(user_id)
             if count >= WatchlistService.MAX_WATCHLISTS:
-                logger.warning(f"User {user_id} reached watchlist limit ({count})")
+                logger.warning(f"[watchlist] limit reached user={user_id} count={count}")
                 raise BadRequestException("Watchlist limit reached")
 
-            # Create (flush inside repo)
             watchlist = await self.repo.create(user_id, name)
-            # Create a Pydantic response while still in session to ensure all attributes are loaded
+            # Serialize while session still alive (attributes loaded)
             response = WatchlistResponse.model_validate(watchlist)
 
-        # 🔹 Invalidate cache outside of transaction
-        await WatchlistCache.invalidate(user_id)
-        logger.info(f"Created watchlist '{name}' for user {user_id}")
-        
+        # ✅ Outside transaction — invalidate ALL paginated list pages for this user
+        await WatchlistCache.invalidate_list(user_id)
+        logger.info(f"[watchlist] created name={name} user={user_id} id={response.id}")
+
         return response
 
-    async def get_user_watchlists(self, user_id: UUID, skip=0, limit=20) -> list[WatchlistResponse]:
+    async def get_user_watchlists(self, user_id: UUID, skip: int = 0, limit: int = 20) -> list[WatchlistResponse]:
         limit = min(limit, 100)
-        
-        # 🔹 Try Cache (only for first page default query)
-        if skip == 0 and limit == 20:
-            cached = await WatchlistCache.get_watchlists(user_id)
-            if cached is not None:
-                logger.debug(f"Cache hit for user {user_id} watchlists")
-                return [WatchlistResponse.model_validate(w) for w in cached]
 
-        logger.debug(f"Cache miss or paginated request for user {user_id} watchlists")
-        
-        # Wrap DB read in transaction block
+        # 🔹 Cache-aside: pagination-aware key
+        cached = await WatchlistCache.get_list(user_id, skip, limit)
+        if cached is not None:
+            # Reconstruct Pydantic models from cached dicts — type-consistent output
+            return [WatchlistResponse.model_validate(w) for w in cached]
+
         async with self.repo.db.begin():
             watchlists = await self.repo.get_by_user(user_id, skip, limit)
             response_models = [WatchlistResponse.model_validate(w) for w in watchlists]
-        
-        # 🔹 Convert to serializable format for cache
-        if skip == 0 and limit == 20:
-            serializable = [w.model_dump() for w in response_models]
-            await WatchlistCache.set_watchlists(user_id, serializable)
-            
+
+        # 🔹 Populate cache with serialized dicts
+        await WatchlistCache.set_list(
+            user_id, skip, limit,
+            [w.model_dump() for w in response_models]
+        )
+
         return response_models
+
+    async def get_watchlist(self, user_id: UUID, watchlist_id: UUID) -> WatchlistResponse:
+        # 🔹 Cache-aside: single watchlist detail
+        cached = await WatchlistCache.get_detail(watchlist_id)
+        if cached is not None:
+            detail = WatchlistResponse.model_validate(cached)
+            # Ownership check still enforced even on cache hit
+            if str(cached.get("user_id")) != str(user_id):
+                raise UnauthorizedException()
+            return detail
+
+        async with self.repo.db.begin():
+            watchlist = await self.repo.get_by_id(watchlist_id)
+
+        if not watchlist:
+            raise NotFoundException("Watchlist not found")
+
+        if watchlist.user_id != user_id:
+            raise UnauthorizedException()
+
+        response = WatchlistResponse.model_validate(watchlist)
+
+        # Cache includes user_id for ownership validation on cache hits
+        data = response.model_dump()
+        data["user_id"] = str(user_id)
+        await WatchlistCache.set_detail(watchlist_id, data)
+
+        return response
 
     async def delete_watchlist(self, user_id: UUID, watchlist_id: UUID) -> None:
         async with self.repo.db.begin():
             watchlist = await self.repo.get_by_id(watchlist_id)
 
             if not watchlist:
-                logger.warning(f"User {user_id} attempted to delete non-existent watchlist {watchlist_id}")
                 raise NotFoundException("Watchlist not found")
 
             if watchlist.user_id != user_id:
-                logger.error(f"Unauthorized deletion attempt by user {user_id} on watchlist {watchlist_id}")
+                logger.warning(f"[watchlist] unauthorized delete attempt user={user_id} id={watchlist_id}")
                 raise UnauthorizedException()
 
             await self.repo.delete(watchlist_id)
-        
-        # 🔹 Invalidate cache outside transaction
-        await WatchlistCache.invalidate(user_id)
-        logger.info(f"Deleted watchlist {watchlist_id} for user {user_id}")
+
+        # Invalidate both the list pages and the single detail key
+        await WatchlistCache.invalidate_list(user_id)
+        await WatchlistCache.invalidate_detail(watchlist_id)
+        logger.info(f"[watchlist] deleted id={watchlist_id} user={user_id}")
