@@ -1,6 +1,6 @@
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.session import get_db
+from app.api.deps import get_db
 
 from app.market.repository import MarketRepository
 from app.market.service import MarketService

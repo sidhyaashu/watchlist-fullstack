@@ -3,6 +3,10 @@
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
 import { useAuth } from "@/hooks/use-auth";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useWatchlists } from "@/features/watchlist";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -47,14 +51,18 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
-            <CardDescription>
-              Your latest authentication and account events.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+        {/* Watchlists Widget added below the top metrics */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <WatchlistWidget />
+          
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>
+                Your latest authentication and account events.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
             <div className="space-y-4">
               <div className="flex items-center">
                 <div className="ml-4 space-y-1">
@@ -73,7 +81,52 @@ export default function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </div>
     </DashboardLayout>
+  );
+}
+
+function WatchlistWidget() {
+  const { data: watchlists, isLoading } = useWatchlists({ limit: 3 });
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle>Your Watchlists</CardTitle>
+          <CardDescription>Recently active lists</CardDescription>
+        </div>
+        <Link href="/watchlists">
+          <Button variant="ghost" size="sm" className="text-indigo-600">
+            View All <ArrowRight className="ml-2 h-4 w-4" />
+          </Button>
+        </Link>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="space-y-3">
+            {[1, 2].map(i => (
+              <div key={i} className="h-12 bg-slate-100 rounded-md animate-pulse" />
+            ))}
+          </div>
+        ) : !watchlists || watchlists.length === 0 ? (
+          <div className="text-center p-4 border border-dashed rounded-md text-slate-500 text-sm">
+            No watchlists created yet.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {watchlists.map(list => (
+              <Link key={list.id} href={`/watchlists/${list.id}`}>
+                <div className="flex justify-between items-center p-3 rounded-md border hover:border-indigo-300 hover:bg-slate-50 transition-colors cursor-pointer">
+                  <span className="font-medium text-slate-800">{list.name}</span>
+                  <span className="text-xs text-slate-400">View</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }

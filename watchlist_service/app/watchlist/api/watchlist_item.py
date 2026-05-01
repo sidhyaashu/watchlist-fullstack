@@ -13,7 +13,7 @@ from app.watchlist.dependencies import get_watchlist_item_service
 router = APIRouter(prefix="/watchlists/{watchlist_id}/items", tags=["Watchlist Items"])
 
 
-@router.post("/", response_model=WatchlistItemResponse)
+@router.post("", response_model=WatchlistItemResponse)
 async def add_item(
     watchlist_id: UUID,
     payload: WatchlistItemCreate,
@@ -26,7 +26,7 @@ async def add_item(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/", response_model=list[WatchlistItemResponse])
+@router.get("", response_model=list[WatchlistItemResponse])
 async def get_items(
     watchlist_id: UUID,
     skip: int = 0,

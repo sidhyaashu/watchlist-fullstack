@@ -8,7 +8,8 @@ import {
   LogOut, 
   LayoutDashboard, 
   Settings, 
-  Bell
+  Bell,
+  ListEnd
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
@@ -57,6 +58,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <Link href="/dashboard" className="flex items-center space-x-3 px-4 py-2 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
             <LayoutDashboard size={20} />
             <span>Dashboard</span>
+          </Link>
+          <Link href="/watchlists" className="flex items-center space-x-3 px-4 py-2 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
+            <ListEnd size={20} />
+            <span>Watchlists</span>
           </Link>
           <Link href="/profile" className="flex items-center space-x-3 px-4 py-2 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
             <User size={20} />

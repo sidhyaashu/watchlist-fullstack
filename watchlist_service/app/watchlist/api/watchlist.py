@@ -12,7 +12,7 @@ from app.core.http_cache import make_etag, cache_control_private, cache_control_
 router = APIRouter(prefix="/watchlists", tags=["Watchlists"])
 
 
-@router.post("/", status_code=201)
+@router.post("", status_code=201)
 async def create_watchlist(
     payload: WatchlistCreate,
     service: WatchlistService = Depends(get_watchlist_service),
@@ -28,7 +28,7 @@ async def create_watchlist(
     )
 
 
-@router.get("/")
+@router.get("")
 async def get_watchlists(
     request: Request,
     skip: int = Query(0, ge=0),
