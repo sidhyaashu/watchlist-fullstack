@@ -24,7 +24,7 @@ class WatchlistItemService:
         self.watchlist_repo = watchlist_repo
         self.market_service = market_service
 
-    async def _get_owned_watchlist(self, user_id: UUID, watchlist_id: UUID):
+    async def _get_owned_watchlist(self, user_id: int, watchlist_id: UUID):
         """Reusable ownership guard — raises if missing or unauthorized."""
         watchlist = await self.watchlist_repo.get_by_id(watchlist_id)
         if not watchlist:
@@ -33,7 +33,7 @@ class WatchlistItemService:
             raise UnauthorizedException()
         return watchlist
 
-    async def add_item(self, user_id: UUID, watchlist_id: UUID, data):
+    async def add_item(self, user_id: int, watchlist_id: UUID, data):
         async with self.repo.db.begin():
             await self._get_owned_watchlist(user_id, watchlist_id)
 
@@ -57,7 +57,7 @@ class WatchlistItemService:
 
         return response
 
-    async def remove_item(self, user_id: UUID, watchlist_id: UUID, instrument_id: str):
+    async def remove_item(self, user_id: int, watchlist_id: UUID, instrument_id: str):
         async with self.repo.db.begin():
             await self._get_owned_watchlist(user_id, watchlist_id)
             await self.repo.remove_item(watchlist_id, instrument_id)
@@ -65,10 +65,10 @@ class WatchlistItemService:
         await WatchlistItemCache.invalidate_items(watchlist_id)
         logger.info(f"[item] removed instrument={instrument_id} watchlist={watchlist_id}")
 
-    async def get_items(self, user_id: UUID, watchlist_id: UUID, skip: int = 0, limit: int = 50) -> list[WatchlistItemResponse]:
+    async def get_items(self, user_id: int, watchlist_id: UUID, skip: int = 0, limit: int = 50) -> list[WatchlistItemResponse]:
         limit = min(limit, 100)
 
-        # 🔹 Ownership check (read — no explicit transaction block needed for SELECTs)
+        # 🔹 Ownership check
         await self._get_owned_watchlist(user_id, watchlist_id)
 
         # 🔹 Cache-aside
@@ -78,19 +78,29 @@ class WatchlistItemService:
 
         items = await self.repo.get_items(watchlist_id, skip, limit)
 
-        # 🔥 Bulk enrich with market data — one call, not N calls
-        instrument_ids = [int(item.instrument_id) for item in items]
-        instruments = await self.market_service.get_bulk_instruments(instrument_ids)
-        instrument_map = {str(inst.id): inst for inst in instruments}
+        # 🔥 Bulk enrich with Azure market data
+        fincodes = [int(item.instrument_id) for item in items]
+        basic_infos, prices = await self.market_service.get_bulk_instruments(fincodes)
+        
+        # Build maps for efficient merging
+        info_map = {str(inst.FINCODE): inst for inst in basic_infos}
+        price_map = {str(p.Fincode): p for p in prices}
 
         enriched: list[WatchlistItemResponse] = []
         for item in items:
             resp = WatchlistItemResponse.model_validate(item)
-            inst = instrument_map.get(str(item.instrument_id))
-            if inst:
-                resp.name = getattr(inst, "name", None)
-                resp.last_price = getattr(inst, "last_price", None)
-                resp.change_percent = getattr(inst, "change_percent", None)
+            info = info_map.get(str(item.instrument_id))
+            price_data = price_map.get(str(item.instrument_id))
+            
+            if info:
+                resp.name = getattr(info, "COMPNAME", None)
+                resp.symbol = getattr(info, "SYMBOL", resp.symbol)
+            
+            if price_data:
+                resp.last_price = getattr(price_data, "Close", None)
+                # Note: change_percent logic could be added here if you have 
+                # comparison with previous close
+            
             enriched.append(resp)
 
         # Cache the fully-enriched list
@@ -100,6 +110,7 @@ class WatchlistItemService:
         )
 
         return enriched
+
 
     async def reorder_items(self, user_id: UUID, watchlist_id: UUID, updates):
         async with self.repo.db.begin():

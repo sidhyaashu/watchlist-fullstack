@@ -13,3 +13,19 @@ AsyncSessionLocal = sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False
 )
+
+# 🌐 External Azure Market Database
+market_engine = create_async_engine(
+    settings.MARKET_DATABASE_URL,
+    echo=settings.DEBUG,
+    future=True,
+    pool_pre_ping=True,  # Handle Azure timeouts
+    pool_size=10,
+    max_overflow=20
+)
+
+MarketSessionLocal = sessionmaker(
+    bind=market_engine,
+    class_=AsyncSession,
+    expire_on_commit=False
+)

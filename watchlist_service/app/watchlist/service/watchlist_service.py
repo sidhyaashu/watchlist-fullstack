@@ -14,7 +14,7 @@ class WatchlistService:
     def __init__(self, repo: WatchlistRepository):
         self.repo = repo
 
-    async def create_watchlist(self, user_id: UUID, name: str) -> WatchlistResponse:
+    async def create_watchlist(self, user_id: int, name: str) -> WatchlistResponse:
         # 🔹 Input Validation
         name = name.strip()
         if not name:
@@ -46,7 +46,7 @@ class WatchlistService:
 
         return response
 
-    async def get_user_watchlists(self, user_id: UUID, skip: int = 0, limit: int = 20) -> list[WatchlistResponse]:
+    async def get_user_watchlists(self, user_id: int, skip: int = 0, limit: int = 20) -> list[WatchlistResponse]:
         limit = min(limit, 100)
 
         # 🔹 Stampede-protected cache-aside for the hottest endpoint.
@@ -59,13 +59,13 @@ class WatchlistService:
         raw = await WatchlistCache.get_or_set_list(user_id, skip, limit, _fetch)
         return [WatchlistResponse.model_validate(w) for w in raw]
 
-    async def get_watchlist(self, user_id: UUID, watchlist_id: UUID) -> WatchlistResponse:
+    async def get_watchlist(self, user_id: int, watchlist_id: UUID) -> WatchlistResponse:
         # 🔹 Cache-aside: single watchlist detail
         cached = await WatchlistCache.get_detail(watchlist_id)
         if cached is not None:
             detail = WatchlistResponse.model_validate(cached)
             # Ownership check still enforced even on cache hit
-            if str(cached.get("user_id")) != str(user_id):
+            if int(cached.get("user_id")) != user_id:
                 raise UnauthorizedException()
             return detail
 
@@ -82,12 +82,12 @@ class WatchlistService:
 
         # Cache includes user_id for ownership validation on cache hits
         data = response.model_dump()
-        data["user_id"] = str(user_id)
+        data["user_id"] = user_id
         await WatchlistCache.set_detail(watchlist_id, data)
 
         return response
 
-    async def delete_watchlist(self, user_id: UUID, watchlist_id: UUID) -> None:
+    async def delete_watchlist(self, user_id: int, watchlist_id: UUID) -> None:
         async with self.repo.db.begin():
             watchlist = await self.repo.get_by_id(watchlist_id)
 

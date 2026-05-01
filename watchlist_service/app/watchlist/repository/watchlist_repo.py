@@ -11,22 +11,19 @@ class WatchlistRepository:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def acquire_user_lock(self, user_id: UUID):
-        # 64-bit safe hash for advisory lock
-        query = text("""
-            SELECT pg_advisory_xact_lock(
-                ('x' || substr(md5(:user_id), 1, 16))::bit(64)::bigint
-            )
-        """)
-        await self.db.execute(query, {"user_id": str(user_id)})
+    async def acquire_user_lock(self, user_id: int):
+        # PG advisory lock expects a 64-bit bigint. 
+        # Since our user_id is now an integer, we can use it directly.
+        query = text("SELECT pg_advisory_xact_lock(:user_id)")
+        await self.db.execute(query, {"user_id": user_id})
 
-    async def count_by_user(self, user_id: UUID) -> int:
+    async def count_by_user(self, user_id: int) -> int:
         result = await self.db.execute(
             select(func.count()).where(Watchlist.user_id == user_id)
         )
         return result.scalar() or 0
 
-    async def get_by_name(self, user_id: UUID, name: str) -> Watchlist | None:
+    async def get_by_name(self, user_id: int, name: str) -> Watchlist | None:
         result = await self.db.execute(
             select(Watchlist)
             .where(Watchlist.user_id == user_id)
@@ -34,7 +31,7 @@ class WatchlistRepository:
         )
         return result.scalar_one_or_none()
 
-    async def create(self, user_id: UUID, name: str) -> Watchlist:
+    async def create(self, user_id: int, name: str) -> Watchlist:
         watchlist = Watchlist(user_id=user_id, name=name)
         self.db.add(watchlist)
         await self.db.flush()

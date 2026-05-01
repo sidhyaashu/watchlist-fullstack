@@ -18,10 +18,10 @@ async def add_item(
     watchlist_id: UUID,
     payload: WatchlistItemCreate,
     service: WatchlistItemService = Depends(get_watchlist_item_service),
-    user_id: str = Depends(get_current_user)
+    user_id: int = Depends(get_current_user)
 ):
     try:
-        return await service.add_item(UUID(user_id) if isinstance(user_id, str) else user_id, watchlist_id, payload)
+        return await service.add_item(user_id, watchlist_id, payload)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -32,11 +32,9 @@ async def get_items(
     skip: int = 0,
     limit: int = 50,
     service: WatchlistItemService = Depends(get_watchlist_item_service),
-    user_id: str = Depends(get_current_user)
+    user_id: int = Depends(get_current_user)
 ):
-    return await service.get_items(
-        UUID(user_id) if isinstance(user_id, str) else user_id, watchlist_id, skip, limit
-    )
+    return await service.get_items(user_id, watchlist_id, skip, limit)
 
 
 @router.delete("/{instrument_id}")
@@ -44,12 +42,10 @@ async def remove_item(
     watchlist_id: UUID,
     instrument_id: str,
     service: WatchlistItemService = Depends(get_watchlist_item_service),
-    user_id: str = Depends(get_current_user)
+    user_id: int = Depends(get_current_user)
 ):
     try:
-        await service.remove_item(
-            UUID(user_id) if isinstance(user_id, str) else user_id, watchlist_id, instrument_id
-        )
+        await service.remove_item(user_id, watchlist_id, instrument_id)
         return {"message": "Removed successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -60,12 +56,10 @@ async def reorder_items(
     watchlist_id: UUID,
     updates: list[WatchlistItemReorder],
     service: WatchlistItemService = Depends(get_watchlist_item_service),
-    user_id: str = Depends(get_current_user)
+    user_id: int = Depends(get_current_user)
 ):
     try:
-        await service.reorder_items(
-            UUID(user_id) if isinstance(user_id, str) else user_id, watchlist_id, updates
-        )
+        await service.reorder_items(user_id, watchlist_id, updates)
         return {"message": "Reordered successfully"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
