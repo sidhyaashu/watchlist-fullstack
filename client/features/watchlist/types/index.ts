@@ -15,7 +15,7 @@ export interface Watchlist {
 export interface WatchlistItem {
   id: string;
   watchlist_id: string;
-  instrument_id: string;
+  instrument_id: number;
   symbol: string;
   exchange: string;
   position: number;
@@ -23,7 +23,11 @@ export interface WatchlistItem {
   name: string | null;
   last_price: number | null;
   change_percent: number | null;
+  sector: string | null;
+  year_high: number | null;
+  year_low: number | null;
 }
+
 
 // ─── Request payloads ─────────────────────────────────────────────────────────
 

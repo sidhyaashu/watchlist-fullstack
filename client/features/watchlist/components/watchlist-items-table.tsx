@@ -1,7 +1,8 @@
 "use client";
 
-import { Trash, ExternalLink, GripVertical } from "lucide-react";
+import { Activity, Trash, ExternalLink, GripVertical } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -14,6 +15,8 @@ import { Button } from "@/components/ui/button";
 import { WatchlistItem, useRemoveWatchlistItem } from "@/features/watchlist";
 import { PriceRangeBand } from "./price-range-band";
 import { getLogoGradient } from "@/lib/utils/logo-utils";
+import { WATCHLIST_COLUMNS } from "../config/column-definitions";
+import { Numeric } from "@/components/ui/numeric";
 
 interface WatchlistItemsTableProps {
   watchlistId: string;
@@ -32,7 +35,6 @@ const getSectorClass = (sector?: string) => {
 };
 
 export function WatchlistItemsTable({ watchlistId, items, isLoading }: WatchlistItemsTableProps) {
-
   const removeItem = useRemoveWatchlistItem();
 
   const handleRemove = (instrumentId: number) => {
@@ -72,12 +74,20 @@ export function WatchlistItemsTable({ watchlistId, items, isLoading }: Watchlist
           <TableHeader>
             <TableRow className="bg-white/40 hover:bg-white/40">
               <TableHead className="w-10"></TableHead>
-              <TableHead className="ts-eyebrow py-3">Stock</TableHead>
-              <TableHead className="ts-eyebrow text-right">Price</TableHead>
-              <TableHead className="ts-eyebrow text-right">Day</TableHead>
-              <TableHead className="ts-eyebrow text-center">52W Range</TableHead>
-              <TableHead className="ts-eyebrow">Sector</TableHead>
-              <TableHead className="w-20 text-right pr-6">Actions</TableHead>
+              {WATCHLIST_COLUMNS.map((col) => (
+                <TableHead 
+                  key={col.id} 
+                  className={cn(
+                    "ts-eyebrow py-3",
+                    col.align === "right" && "text-right",
+                    col.align === "center" && "text-center",
+                    col.id === "actions" && "pr-6"
+                  )}
+                  style={col.width ? { width: col.width } : {}}
+                >
+                  {col.label}
+                </TableHead>
+              ))}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -86,64 +96,93 @@ export function WatchlistItemsTable({ watchlistId, items, isLoading }: Watchlist
                 <TableCell className="text-center cursor-grab active:cursor-grabbing">
                   <GripVertical className="w-4 h-4 text-ink-4 opacity-50 group-hover:opacity-100 group-hover:text-accent transition-opacity" />
                 </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-3 min-w-[200px]">
-                    <div 
-                      className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs text-white shadow-sm"
-                      style={{ background: getLogoGradient(item.symbol) }}
-                    >
-                      {item.symbol.slice(0, 2)}
-                    </div>
-                    <div>
-                      <div className="ts-body font-semibold text-ink leading-tight">{item.name || "Unknown Company"}</div>
-                      <div className="ts-mono text-[10.5px] text-ink-3 font-medium mt-0.5">{item.symbol} · NSE</div>
-                    </div>
-                  </div>
-                </TableCell>
-                <TableCell className="text-right">
-                  <span className="ts-mono text-[13.5px] font-bold text-ink">
-                    ₹{item.last_price?.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                  </span>
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full ts-mono text-[11.5px] font-semibold ${item.change_percent && item.change_percent >= 0 ? "text-good bg-good-soft" : "text-danger-deep bg-danger-soft"}`}>
-                    {item.change_percent !== null ? (
-                      <>
-                        {item.change_percent >= 0 ? "↑" : "↓"}
-                        {Math.abs(item.change_percent).toFixed(2)}%
-                      </>
-                    ) : "—"}
-                  </div>
-                </TableCell>
-                <TableCell className="text-center">
-                  <PriceRangeBand 
-                    current={item.last_price || 0} 
-                    low={item.year_low || 0} 
-                    high={item.year_high || 0} 
-                  />
-                </TableCell>
-                <TableCell>
-                  <span className={`sec ${getSectorClass(item.sector)}`}>
-                    {item.sector || "Other"}
-                  </span>
-                </TableCell>
-
-                <TableCell className="text-right pr-6">
-                  <div className="flex justify-end gap-1">
-                    <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-ink-3 hover:bg-accent-soft hover:text-accent-deep transition-all">
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-8 h-8 rounded-lg text-ink-3 hover:bg-danger-soft hover:text-danger-deep transition-all"
-                      onClick={() => handleRemove(item.instrument_id)}
-                      disabled={removeItem.isPending}
-                    >
-                      <Trash className="w-3.5 h-3.5" />
-                    </Button>
-                  </div>
-                </TableCell>
+                
+                {WATCHLIST_COLUMNS.map((col) => {
+                  switch (col.id) {
+                    case "stock":
+                      return (
+                        <TableCell key={col.id}>
+                          <div className="flex items-center gap-3 min-w-[200px]">
+                            <div 
+                              className="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs text-white shadow-sm"
+                              style={{ background: getLogoGradient(item.symbol) }}
+                            >
+                              {item.symbol.slice(0, 2)}
+                            </div>
+                            <div>
+                              <div className="ts-body font-semibold text-ink leading-tight">{item.name || "Unknown Company"}</div>
+                              <div className="ts-mono text-[10.5px] text-ink-3 font-medium mt-0.5">{item.symbol} · NSE</div>
+                            </div>
+                          </div>
+                        </TableCell>
+                      );
+                    case "price":
+                      return (
+                        <TableCell key={col.id} className="text-right">
+                          <Numeric 
+                            value={item.last_price || 0} 
+                            type="currency" 
+                            className="text-[13.5px] font-bold text-ink" 
+                          />
+                        </TableCell>
+                      );
+                    case "change":
+                      return (
+                        <TableCell key={col.id} className="text-right">
+                          <div className={cn(
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full ts-mono text-[11.5px] font-semibold",
+                            (item.change_percent || 0) >= 0 ? "text-good bg-good-soft" : "text-danger-deep bg-danger-soft"
+                          )}>
+                            {(item.change_percent || 0) >= 0 ? "↑" : "↓"}
+                            <Numeric 
+                              value={Math.abs(item.change_percent || 0)} 
+                              type="number" 
+                              precision={2} 
+                            />%
+                          </div>
+                        </TableCell>
+                      );
+                    case "range":
+                      return (
+                        <TableCell key={col.id} className="text-center">
+                          <PriceRangeBand 
+                            current={item.last_price || 0} 
+                            low={item.year_low || 0} 
+                            high={item.year_high || 0} 
+                          />
+                        </TableCell>
+                      );
+                    case "sector":
+                      return (
+                        <TableCell key={col.id}>
+                          <span className={cn("sec", getSectorClass(item.sector))}>
+                            {item.sector || "Other"}
+                          </span>
+                        </TableCell>
+                      );
+                    case "actions":
+                      return (
+                        <TableCell key={col.id} className="text-right pr-6">
+                          <div className="flex justify-end gap-1">
+                            <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-ink-3 hover:bg-accent-soft hover:text-accent-deep transition-all">
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-8 h-8 rounded-lg text-ink-3 hover:bg-danger-soft hover:text-danger-deep transition-all"
+                              onClick={() => handleRemove(item.instrument_id)}
+                              disabled={removeItem.isPending}
+                            >
+                              <Trash className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      );
+                    default:
+                      return null;
+                  }
+                })}
               </TableRow>
             ))}
           </TableBody>
@@ -153,5 +192,4 @@ export function WatchlistItemsTable({ watchlistId, items, isLoading }: Watchlist
   );
 }
 
-import { Activity } from "lucide-react";
 

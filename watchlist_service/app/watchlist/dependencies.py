@@ -19,9 +19,11 @@ def get_watchlist_item_repository(db: AsyncSession = Depends(get_db)) -> Watchli
 
 
 def get_watchlist_service(
-    repo: WatchlistRepository = Depends(get_watchlist_repository)
+    repo: WatchlistRepository = Depends(get_watchlist_repository),
+    item_repo: WatchlistItemRepository = Depends(get_watchlist_item_repository)
 ) -> WatchlistService:
-    return WatchlistService(repo)
+    return WatchlistService(repo, item_repo)
+
 
 def get_watchlist_item_service(
     repo: WatchlistItemRepository = Depends(get_watchlist_item_repository),

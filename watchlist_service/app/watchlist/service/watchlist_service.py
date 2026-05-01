@@ -11,10 +11,12 @@ class WatchlistService:
 
     MAX_WATCHLISTS = 10  # business rule
 
-    def __init__(self, repo: WatchlistRepository):
+    def __init__(self, repo: WatchlistRepository, item_repo: WatchlistItemRepository = None):
         self.repo = repo
+        self.item_repo = item_repo
 
     async def create_watchlist(self, user_id: int, name: str) -> WatchlistResponse:
+
         # 🔹 Input Validation
         name = name.strip()
         if not name:
@@ -49,15 +51,45 @@ class WatchlistService:
     async def get_user_watchlists(self, user_id: int, skip: int = 0, limit: int = 20) -> list[WatchlistResponse]:
         limit = min(limit, 100)
 
-        # 🔹 Stampede-protected cache-aside for the hottest endpoint.
-        # On expiry, only ONE request fetches from DB; others wait then read from cache.
         async def _fetch() -> list[dict]:
             async with self.repo.db.begin():
                 watchlists = await self.repo.get_by_user(user_id, skip, limit)
+                
+                # 🔹 Seed default watchlist for brand new users
+                if not watchlists and skip == 0:
+                    logger.info(f"[watchlist] seeding default for user={user_id}")
+                    default_wl = await self._create_default_watchlist(user_id)
+                    watchlists = [default_wl]
+
                 return [WatchlistResponse.model_validate(w).model_dump() for w in watchlists]
 
         raw = await WatchlistCache.get_or_set_list(user_id, skip, limit, _fetch)
         return [WatchlistResponse.model_validate(w) for w in raw]
+
+    async def _create_default_watchlist(self, user_id: int):
+        """Creates 'Core Bluechips' and seeds it with Reliance, TCS, HDFCBANK."""
+        wl = await self.repo.create(user_id, "Core Bluechips")
+        
+        if self.item_repo:
+            from app.watchlist.models.watchlist_item import WatchlistItem
+            # Reliance: 11, TCS: 13, HDFCBANK: 15
+            seeds = [
+                {"fincode": 11, "symbol": "RELIANCE"},
+                {"fincode": 13, "symbol": "TCS"},
+                {"fincode": 15, "symbol": "HDFCBANK"}
+            ]
+            for s in seeds:
+                item = WatchlistItem(
+                    watchlist_id=wl.id,
+                    instrument_id=s["fincode"],
+                    symbol=s["symbol"],
+                    exchange="NSE"
+                )
+                self.repo.db.add(item)
+            await self.repo.db.flush()
+        
+        return wl
+
 
     async def get_watchlist(self, user_id: int, watchlist_id: UUID) -> WatchlistResponse:
         # 🔹 Cache-aside: single watchlist detail
