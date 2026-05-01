@@ -27,3 +27,7 @@ export { useRemoveWatchlistItem } from "./hooks/use-remove-watchlist-item";
 
 // Components
 export { InstrumentSearch } from "./components/instrument-search";
+export { WatchlistKPIs } from "./components/watchlist-kpis";
+export { WatchlistItemsTable } from "./components/watchlist-items-table";
+export { PriceRangeBand } from "./components/price-range-band";
+

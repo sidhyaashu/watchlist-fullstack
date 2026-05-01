@@ -7,21 +7,21 @@ from datetime import datetime
 
 # 🔹 Add Instrument to Watchlist
 class WatchlistItemCreate(BaseModel):
-    instrument_id: str = Field(..., min_length=1, max_length=50)
+    instrument_id: int = Field(...)
     symbol: str = Field(..., min_length=1, max_length=20)
     exchange: str = Field(..., min_length=1, max_length=10)
 
 
 # 🔹 Update Position (ordering)
 class WatchlistItemReorder(BaseModel):
-    instrument_id: str
+    instrument_id: int
     position: int
 
 
 # 🔹 Response Model
 class WatchlistItemResponse(BaseModel):
     id: UUID
-    instrument_id: str
+    instrument_id: int
     symbol: str
     exchange: str
     position: Optional[int]

@@ -33,15 +33,50 @@ class WatchlistItemRepository:
         watchlist_id: UUID,
         skip: int = 0,
         limit: int = 50
-    ) -> list[WatchlistItem]:
-        result = await self.db.execute(
-            select(WatchlistItem)
+    ):
+        """
+        Fetches watchlist items enriched with market data in a single SQL query.
+        Joins across 'app' (user data) and 'public' (market data) schemas.
+        """
+        from app.market.models import CompanyMaster, NseMonthPrice
+        from sqlalchemy import and_
+
+        # 1. Subquery to identify the latest price record (Year/Month) per FINCODE
+        latest_price_sub = (
+            select(
+                NseMonthPrice.Fincode,
+                func.max(NseMonthPrice.Year * 100 + NseMonthPrice.Month).label("latest_period")
+            )
+            .group_by(NseMonthPrice.Fincode)
+            .subquery()
+        )
+
+        # 2. Main query joining items -> company info -> latest price
+        query = (
+            select(
+                WatchlistItem,
+                CompanyMaster.COMPNAME,
+                CompanyMaster.SYMBOL,
+                NseMonthPrice.Close.label("last_price")
+            )
+            .outerjoin(CompanyMaster, WatchlistItem.instrument_id == CompanyMaster.FINCODE)
+            .outerjoin(latest_price_sub, WatchlistItem.instrument_id == latest_price_sub.c.Fincode)
+            .outerjoin(
+                NseMonthPrice,
+                and_(
+                    WatchlistItem.instrument_id == NseMonthPrice.Fincode,
+                    (NseMonthPrice.Year * 100 + NseMonthPrice.Month) == latest_price_sub.c.latest_period
+                )
+            )
             .where(WatchlistItem.watchlist_id == watchlist_id)
             .order_by(WatchlistItem.position.asc())
             .offset(skip)
             .limit(limit)
         )
-        return result.scalars().all()
+
+        result = await self.db.execute(query)
+        return result.all()
+
 
     async def remove_item(self, watchlist_id: UUID, instrument_id: str):
         await self.db.execute(

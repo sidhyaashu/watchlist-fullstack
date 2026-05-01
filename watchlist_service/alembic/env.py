@@ -57,6 +57,10 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 def do_run_migrations(connection: Connection) -> None:
+    from sqlalchemy import text
+    # Ensure our custom schema exists before running migrations
+    connection.execute(text("CREATE SCHEMA IF NOT EXISTS app"))
+    
     context.configure(
         connection=connection, 
         target_metadata=target_metadata,

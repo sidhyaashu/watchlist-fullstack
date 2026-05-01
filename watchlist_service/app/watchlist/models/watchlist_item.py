@@ -14,12 +14,12 @@ class WatchlistItem(Base):
 
     watchlist_id = Column(
         UUID(as_uuid=True),
-        ForeignKey("watchlists.id", ondelete="CASCADE"),
+        ForeignKey("app.watchlists.id", ondelete="CASCADE"),
         nullable=False,
         index=True
     )
 
-    instrument_id = Column(String(50), nullable=False, index=True)
+    instrument_id = Column(Integer, nullable=False, index=True)
 
     symbol = Column(String(20), nullable=False)
     exchange = Column(String(10), nullable=False)
@@ -34,4 +34,5 @@ class WatchlistItem(Base):
     # constraints
     __table_args__ = (
         UniqueConstraint("watchlist_id", "instrument_id", name="uq_watchlist_instrument"),
-    )
+        {"schema": "app"}
+    )

@@ -76,30 +76,21 @@ class WatchlistItemService:
         if cached is not None:
             return [WatchlistItemResponse.model_validate(i) for i in cached]
 
-        items = await self.repo.get_items(watchlist_id, skip, limit)
-
-        # 🔥 Bulk enrich with Azure market data
-        fincodes = [int(item.instrument_id) for item in items]
-        basic_infos, prices = await self.market_service.get_bulk_instruments(fincodes)
-        
-        # Build maps for efficient merging
-        info_map = {str(inst.FINCODE): inst for inst in basic_infos}
-        price_map = {str(p.Fincode): p for p in prices}
+        # 🔥 Single high-performance SQL query joining items + market data
+        rows = await self.repo.get_items(watchlist_id, skip, limit)
 
         enriched: list[WatchlistItemResponse] = []
-        for item in items:
+        for row in rows:
+            item, comp_name, symbol, last_price = row
+            
             resp = WatchlistItemResponse.model_validate(item)
-            info = info_map.get(str(item.instrument_id))
-            price_data = price_map.get(str(item.instrument_id))
-            
-            if info:
-                resp.name = getattr(info, "COMPNAME", None)
-                resp.symbol = getattr(info, "SYMBOL", resp.symbol)
-            
-            if price_data:
-                resp.last_price = getattr(price_data, "Close", None)
-                # Note: change_percent logic could be added here if you have 
-                # comparison with previous close
+            # Override with fresh market data from JOIN
+            if comp_name:
+                resp.name = comp_name
+            if symbol:
+                resp.symbol = symbol
+            if last_price:
+                resp.last_price = last_price
             
             enriched.append(resp)
 
@@ -110,6 +101,7 @@ class WatchlistItemService:
         )
 
         return enriched
+
 
 
     async def reorder_items(self, user_id: UUID, watchlist_id: UUID, updates):

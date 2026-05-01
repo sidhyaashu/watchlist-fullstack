@@ -3,7 +3,9 @@ from app.db.base import Base
 
 
 class CompanyMaster(Base):
-    __tablename__ = "Company_Master"  # Exact casing from Azure SQL
+    __tablename__ = "Company_Master"
+    __table_args__ = {"schema": "public"}
+
 
     FINCODE = Column(Integer, primary_key=True, autoincrement=False)
     SCRIPCODE = Column(Integer)
@@ -29,6 +31,7 @@ class NseMonthPrice(Base):
 
     __table_args__ = (
         PrimaryKeyConstraint("Fincode", "Month", "Year"),
+        {"schema": "public"}
     )
 
 

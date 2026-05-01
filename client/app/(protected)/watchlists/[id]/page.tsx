@@ -4,10 +4,14 @@ import { use } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { DashboardLayout } from "@/components/layouts/dashboard-layout";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useWatchlist, useWatchlistItems, InstrumentSearch } from "@/features/watchlist";
-import { WatchlistItemsTable } from "@/features/watchlist/components/watchlist-items-table";
+import { 
+  useWatchlist, 
+  useWatchlistItems, 
+  InstrumentSearch, 
+  WatchlistKPIs, 
+  WatchlistItemsTable 
+} from "@/features/watchlist";
+
 
 export default function WatchlistDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -18,34 +22,47 @@ export default function WatchlistDetailPage({ params }: { params: Promise<{ id: 
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        <div className="flex items-center space-x-4">
-          <Link href="/watchlists">
-            <Button variant="outline" size="icon" className="h-8 w-8">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          {isLoadingWatchlist ? (
-            <Skeleton className="h-8 w-48" />
-          ) : (
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">{watchlist?.name}</h1>
-              <p className="text-sm text-slate-500">Manage the instruments in this list</p>
+      <div className="max-w-[1200px] mx-auto space-y-8 py-4">
+        {/* Header Section */}
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-3">
+            <Link href="/watchlists" className="p-2 -ml-2 rounded-full hover:bg-white/40 transition-colors">
+              <ArrowLeft className="h-5 w-5 text-ink-3" />
+            </Link>
+            {isLoadingWatchlist ? (
+              <div className="h-8 w-48 bg-ink-4/10 animate-pulse rounded" />
+            ) : (
+              <h1 className="ts-h1 text-ink">{watchlist?.name}</h1>
+            )}
+          </div>
+          <p className="ts-body text-ink-3 ml-8">
+            Manage your tracked assets and monitor performance in real-time.
+          </p>
+        </div>
+
+        {/* KPIs Strip */}
+        <WatchlistKPIs />
+
+        {/* Main Content Area */}
+        <div className="space-y-4">
+          <div className="flex justify-between items-end">
+            <div className="flex flex-col gap-1">
+              <h2 className="ts-h2 text-ink">Instruments</h2>
+              <div className="ts-eyebrow">Showing {items.length} stocks</div>
             </div>
-          )}
-        </div>
+            <div className="flex items-center gap-3">
+              <InstrumentSearch watchlistId={id} />
+            </div>
+          </div>
 
-        <div className="flex justify-between items-end">
-          <h2 className="text-lg font-semibold mb-2">Instruments</h2>
-          <InstrumentSearch watchlistId={id} />
+          <WatchlistItemsTable 
+            watchlistId={id} 
+            items={items} 
+            isLoading={isLoadingItems} 
+          />
         </div>
-
-        <WatchlistItemsTable 
-          watchlistId={id} 
-          items={items} 
-          isLoading={isLoadingItems} 
-        />
       </div>
     </DashboardLayout>
   );
 }
+

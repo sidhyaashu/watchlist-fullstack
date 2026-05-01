@@ -38,21 +38,21 @@ export function WatchlistCard({ watchlist }: WatchlistCardProps) {
 
   return (
     <Link href={`/watchlists/${watchlist.id}`}>
-      <Card className="hover:border-indigo-500 hover:shadow-md transition-all cursor-pointer h-full flex flex-col group">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-lg font-semibold group-hover:text-indigo-600 transition-colors">
+      <div className="glass-card hover:bg-white/60 hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer h-full flex flex-col group p-5">
+        <div className="flex flex-row items-center justify-between pb-2">
+          <h2 className="ts-h2 text-ink group-hover:text-accent transition-colors">
             {watchlist.name}
-          </CardTitle>
+          </h2>
           <div onClick={(e) => e.preventDefault()}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-ink-3 hover:text-ink hover:bg-white/40">
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="glass-card">
                 <DropdownMenuItem
-                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                  className="text-danger-deep focus:text-danger focus:bg-danger-soft cursor-pointer ts-body"
                   onClick={handleDelete}
                 >
                   <Trash className="mr-2 h-4 w-4" />
@@ -61,14 +61,15 @@ export function WatchlistCard({ watchlist }: WatchlistCardProps) {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </CardHeader>
-        <CardContent className="flex-1">
-          <div className="flex items-center text-sm text-slate-500 mt-2">
-            <ListEnd className="mr-2 h-4 w-4" />
-            <span>Created {format(new Date(watchlist.created_at), "MMM d, yyyy")}</span>
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center ts-body text-ink-3 mt-4">
+            <ListEnd className="mr-2 h-4 w-4 opacity-50" />
+            <span className="ts-small">Created {format(new Date(watchlist.created_at), "MMM d, yyyy")}</span>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </Link>
   );
 }
+

@@ -2,7 +2,7 @@ from uuid import UUID
 from fastapi import HTTPException, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.db.session import AsyncSessionLocal, MarketSessionLocal
+from app.db.session import AsyncSessionLocal
 
 
 # 🔹 DB Dependency
@@ -10,11 +10,6 @@ async def get_db():
     async with AsyncSessionLocal() as session:
         yield session
 
-
-# 🔹 External Market DB Dependency
-async def get_market_db():
-    async with MarketSessionLocal() as session:
-        yield session
 
 
 # 🔹 Auth Dependency
