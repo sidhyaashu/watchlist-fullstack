@@ -138,4 +138,26 @@
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-glass);
   backdrop-filter: blur(24px) saturate(140%);
-}
+}
+
+/* Sector Pills */
+.sec {
+  font-size: 10.5px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  display: inline-block;
+}
+
+.sec.fin { background: var(--good-soft); color: var(--good); border-color: rgba(16,163,127,0.3); }
+.sec.it { background: var(--accent-soft); color: var(--accent-deep); border-color: rgba(43,107,255,0.28); }
+.sec.fmcg { background: var(--warn-soft); color: var(--warn); border-color: rgba(226,154,43,0.3); }
+.sec.pharma { background: var(--danger-soft); color: var(--danger-deep); border-color: rgba(226,85,122,0.3); }
+
+[data-theme="dark"] .sec.fin { background: rgba(74,222,128,0.12); color: #4ADE80; border-color: rgba(74,222,128,0.28); }
+[data-theme="dark"] .sec.it { background: rgba(255,255,255,0.07); color: #F2F2F3; border-color: rgba(255,255,255,0.18); }
+[data-theme="dark"] .sec.fmcg { background: rgba(251,191,36,0.12); color: #FBBF24; border-color: rgba(251,191,36,0.28); }
+[data-theme="dark"] .sec.pharma { background: rgba(248,113,113,0.12); color: #FCA5A5; border-color: rgba(248,113,113,0.28); }
+

@@ -35,8 +35,18 @@ class NseMonthPrice(Base):
     )
 
 
+class CompanyEquity(Base):
+    __tablename__ = "company_equity"
+    __table_args__ = {"schema": "public"}
+
+    FINCODE = Column(Integer, primary_key=True, autoincrement=False)
+    high = Column(Float)
+    low = Column(Float)
+
+
 # Keep the local Instrument model for now if needed, but we'll mostly use the ones above
 class Instrument(Base):
+
     __tablename__ = "instruments"
 
     id = Column(Integer, primary_key=True, index=True)

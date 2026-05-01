@@ -38,7 +38,7 @@ class WatchlistItemRepository:
         Fetches watchlist items enriched with market data in a single SQL query.
         Joins across 'app' (user data) and 'public' (market data) schemas.
         """
-        from app.market.models import CompanyMaster, NseMonthPrice
+        from app.market.models import CompanyMaster, NseMonthPrice, CompanyEquity
         from sqlalchemy import and_
 
         # 1. Subquery to identify the latest price record (Year/Month) per FINCODE
@@ -51,15 +51,21 @@ class WatchlistItemRepository:
             .subquery()
         )
 
-        # 2. Main query joining items -> company info -> latest price
+        # 2. Main query joining items -> company info -> latest price -> 52w equity data
         query = (
             select(
                 WatchlistItem,
                 CompanyMaster.COMPNAME,
                 CompanyMaster.SYMBOL,
-                NseMonthPrice.Close.label("last_price")
+                CompanyMaster.industry,
+                NseMonthPrice.Close.label("last_price"),
+                NseMonthPrice.Open.label("open_price"),
+                CompanyEquity.high.label("year_high"),
+                CompanyEquity.low.label("year_low")
+
             )
             .outerjoin(CompanyMaster, WatchlistItem.instrument_id == CompanyMaster.FINCODE)
+            .outerjoin(CompanyEquity, WatchlistItem.instrument_id == CompanyEquity.FINCODE)
             .outerjoin(latest_price_sub, WatchlistItem.instrument_id == latest_price_sub.c.Fincode)
             .outerjoin(
                 NseMonthPrice,
@@ -73,6 +79,7 @@ class WatchlistItemRepository:
             .offset(skip)
             .limit(limit)
         )
+
 
         result = await self.db.execute(query)
         return result.all()

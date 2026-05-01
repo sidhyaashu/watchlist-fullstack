@@ -28,34 +28,63 @@ const KPI = ({ label, value, subValue, trend, sparkline }: KPIProps) => (
   </div>
 );
 
-export const WatchlistKPIs = () => {
+import { WatchlistItem } from "../types";
+
+export const WatchlistKPIs = ({ items }: { items: WatchlistItem[] }) => {
+  const trackedCount = items.length;
+  
+  const bestStock = items.length > 0 
+    ? [...items].sort((a, b) => (b.change_percent || 0) - (a.change_percent || 0))[0]
+    : null;
+    
+  const worstStock = items.length > 0 
+    ? [...items].sort((a, b) => (a.change_percent || 0) - (b.change_percent || 0))[0]
+    : null;
+
+  const avgMove = items.length > 0
+    ? items.reduce((acc, curr) => acc + (curr.change_percent || 0), 0) / items.length
+    : 0;
+
+  const advancingCount = items.filter(i => (i.change_percent || 0) > 0).length;
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
       <KPI 
         label="Tracked" 
-        value="12" 
-        subValue="across 4 lists" 
+        value={trackedCount} 
+        subValue={`assets in list`} 
         sparkline={<Eye size={48} className="text-accent" />}
       />
       <KPI 
         label="Day's Avg Move" 
-        value="+0.78%" 
-        subValue="↑ 8 of 12 advancing" 
-        trend="up"
-        sparkline={<TrendingUp size={48} className="text-good" />}
+        value={`${avgMove >= 0 ? "+" : ""}${avgMove.toFixed(2)}%`} 
+        subValue={`${advancingCount} advancing`} 
+        trend={avgMove >= 0 ? "up" : "down"}
+        sparkline={<Activity size={48} className={avgMove >= 0 ? "text-good" : "text-danger"} />}
       />
-      <KPI 
-        label="Best Today" 
-        value="BAJFINANCE" 
-        subValue="+3.1% · ₹7,420" 
-        trend="up"
-      />
-      <KPI 
-        label="Worst Today" 
-        value="WIPRO" 
-        subValue="−1.8% · ₹284" 
-        trend="down"
-      />
+      {bestStock ? (
+        <KPI 
+          label="Best Today" 
+          value={bestStock.symbol} 
+          subValue={`${(bestStock.change_percent || 0) >= 0 ? "+" : ""}${(bestStock.change_percent || 0).toFixed(1)}% · ₹${(bestStock.last_price || 0).toLocaleString('en-IN')}`} 
+          trend={(bestStock.change_percent || 0) >= 0 ? "up" : "down"}
+          sparkline={<TrendingUp size={48} className="text-good" />}
+        />
+      ) : (
+        <KPI label="Best Today" value="-" subValue="No data" />
+      )}
+      {worstStock ? (
+        <KPI 
+          label="Worst Today" 
+          value={worstStock.symbol} 
+          subValue={`${(worstStock.change_percent || 0) >= 0 ? "+" : ""}${(worstStock.change_percent || 0).toFixed(1)}% · ₹${(worstStock.last_price || 0).toLocaleString('en-IN')}`} 
+          trend={(worstStock.change_percent || 0) >= 0 ? "up" : "down"}
+          sparkline={<TrendingDown size={48} className="text-danger" />}
+        />
+      ) : (
+        <KPI label="Worst Today" value="-" subValue="No data" />
+      )}
     </div>
   );
 };
+

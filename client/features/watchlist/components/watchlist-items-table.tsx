@@ -21,7 +21,18 @@ interface WatchlistItemsTableProps {
   isLoading: boolean;
 }
 
+const getSectorClass = (sector?: string) => {
+  if (!sector) return "energy"; // default fallback
+  const s = sector.toLowerCase();
+  if (s.includes("bank") || s.includes("financial") || s.includes("nbfc")) return "fin";
+  if (s.includes("it") || s.includes("software") || s.includes("tech")) return "it";
+  if (s.includes("fmcg") || s.includes("consumer")) return "fmcg";
+  if (s.includes("pharma") || s.includes("health")) return "pharma";
+  return "energy";
+};
+
 export function WatchlistItemsTable({ watchlistId, items, isLoading }: WatchlistItemsTableProps) {
+
   const removeItem = useRemoveWatchlistItem();
 
   const handleRemove = (instrumentId: number) => {
@@ -105,13 +116,18 @@ export function WatchlistItemsTable({ watchlistId, items, isLoading }: Watchlist
                   </div>
                 </TableCell>
                 <TableCell className="text-center">
-                  <PriceRangeBand current={item.last_price || 0} low={item.last_price ? item.last_price * 0.8 : 0} high={item.last_price ? item.last_price * 1.2 : 0} />
+                  <PriceRangeBand 
+                    current={item.last_price || 0} 
+                    low={item.year_low || 0} 
+                    high={item.year_high || 0} 
+                  />
                 </TableCell>
                 <TableCell>
-                  <span className="inline-block ts-small px-2 py-0.5 rounded-full bg-accent-soft text-accent-deep border border-accent/20">
-                    Financials
+                  <span className={`sec ${getSectorClass(item.sector)}`}>
+                    {item.sector || "Other"}
                   </span>
                 </TableCell>
+
                 <TableCell className="text-right pr-6">
                   <div className="flex justify-end gap-1">
                     <Button variant="ghost" size="icon" className="w-8 h-8 rounded-lg text-ink-3 hover:bg-accent-soft hover:text-accent-deep transition-all">

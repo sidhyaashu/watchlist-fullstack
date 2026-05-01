@@ -81,7 +81,7 @@ class WatchlistItemService:
 
         enriched: list[WatchlistItemResponse] = []
         for row in rows:
-            item, comp_name, symbol, last_price = row
+            item, comp_name, symbol, industry, last_price, open_price, year_high, year_low = row
             
             resp = WatchlistItemResponse.model_validate(item)
             # Override with fresh market data from JOIN
@@ -89,10 +89,23 @@ class WatchlistItemService:
                 resp.name = comp_name
             if symbol:
                 resp.symbol = symbol
+            if industry:
+                resp.sector = industry
             if last_price:
                 resp.last_price = last_price
             
+            # Calculate change % if both prices available
+            if last_price and open_price and open_price != 0:
+                resp.change_percent = ((last_price - open_price) / open_price) * 100
+
+            if year_high:
+                resp.year_high = year_high
+            if year_low:
+                resp.year_low = year_low
+            
             enriched.append(resp)
+
+
 
         # Cache the fully-enriched list
         await WatchlistItemCache.set_items(

@@ -41,7 +41,8 @@ export default function WatchlistDetailPage({ params }: { params: Promise<{ id: 
         </div>
 
         {/* KPIs Strip */}
-        <WatchlistKPIs />
+        <WatchlistKPIs items={items} />
+
 
         {/* Main Content Area */}
         <div className="space-y-4">

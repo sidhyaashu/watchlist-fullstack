@@ -27,10 +27,14 @@ class WatchlistItemResponse(BaseModel):
     position: Optional[int]
     added_at: Optional[datetime]
 
-    # future enrichment fields (from instrument table)
+    # Enrichment fields (from Azure market tables)
     name: Optional[str] = None
     last_price: Optional[float] = None
     change_percent: Optional[float] = None
+    sector: Optional[str] = None
+    year_high: Optional[float] = None
+    year_low: Optional[float] = None
+
 
     class Config:
         from_attributes = True
