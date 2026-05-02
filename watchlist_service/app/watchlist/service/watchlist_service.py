@@ -6,6 +6,7 @@ from app.watchlist.repository.watchlist_item_repo import WatchlistItemRepository
 from app.core.exceptions import BadRequestException, NotFoundException, UnauthorizedException
 from app.cache.watchlist_cache import WatchlistCache
 from app.watchlist.schemas.watchlist import WatchlistResponse
+from app.watchlist.models.watchlist_item import WatchlistItem
 
 
 class WatchlistService:
@@ -72,19 +73,18 @@ class WatchlistService:
         wl = await self.repo.create(user_id, "Core Bluechips")
         
         if self.item_repo:
-            from app.watchlist.models.watchlist_item import WatchlistItem
             # Reliance: 11, TCS: 13, HDFCBANK: 15
             seeds = [
-                {"fincode": 11, "symbol": "RELIANCE"},
-                {"fincode": 13, "symbol": "TCS"},
-                {"fincode": 15, "symbol": "HDFCBANK"}
+                {"fincode": 11, "symbol": "RELIANCE", "exchange": "NSE"},
+                {"fincode": 13, "symbol": "TCS", "exchange": "NSE"},
+                {"fincode": 15, "symbol": "HDFCBANK", "exchange": "NSE"}
             ]
             for s in seeds:
                 item = WatchlistItem(
                     watchlist_id=wl.id,
                     instrument_id=s["fincode"],
                     symbol=s["symbol"],
-                    exchange="NSE"
+                    exchange=s["exchange"]
                 )
                 self.repo.db.add(item)
             await self.repo.db.flush()

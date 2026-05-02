@@ -2,9 +2,6 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_db
 
-from app.market.dependencies import get_market_service
-from app.market.service import MarketService
-
 from app.watchlist.repository.watchlist_repo import WatchlistRepository
 from app.watchlist.repository.watchlist_item_repo import WatchlistItemRepository
 from app.watchlist.service.watchlist_service import WatchlistService
@@ -26,8 +23,9 @@ def get_watchlist_service(
 
 
 def get_watchlist_item_service(
+
     repo: WatchlistItemRepository = Depends(get_watchlist_item_repository),
-    watchlist_repo: WatchlistRepository = Depends(get_watchlist_repository),
-    market_service: MarketService = Depends(get_market_service)
+    watchlist_repo: WatchlistRepository = Depends(get_watchlist_repository)
 ) -> WatchlistItemService:
-    return WatchlistItemService(repo, watchlist_repo, market_service)
+    return WatchlistItemService(repo, watchlist_repo)
+

@@ -38,18 +38,4 @@ class CompanyEquity(Base):
     __tablename__ = "company_equity"
     __table_args__ = {"schema": "public"}
 
-    FINCODE = Column(Integer, primary_key=True, autoincrement=False)
-
-
-
-# Keep the local Instrument model for now if needed, but we'll mostly use the ones above
-class Instrument(Base):
-
-    __tablename__ = "instruments"
-
-    id = Column(Integer, primary_key=True, index=True)
-    symbol = Column(String, index=True)
-    name = Column(String)
-    exchange = Column(String)
-    last_price = Column(Float)
-    updated_at = Column(DateTime)
+    FINCODE = Column(Integer, primary_key=True, autoincrement=False)

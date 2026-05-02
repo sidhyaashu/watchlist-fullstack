@@ -3,7 +3,6 @@ from sqlalchemy.exc import IntegrityError
 
 from app.watchlist.repository.watchlist_repo import WatchlistRepository
 from app.watchlist.repository.watchlist_item_repo import WatchlistItemRepository
-from app.market.service import MarketService
 from app.core.exceptions import UnauthorizedException, NotFoundException, BadRequestException
 from app.cache.watchlist_item_cache import WatchlistItemCache
 from app.watchlist.schemas.watchlist_item import WatchlistItemResponse
@@ -17,12 +16,10 @@ class WatchlistItemService:
     def __init__(
         self,
         repo: WatchlistItemRepository,
-        watchlist_repo: WatchlistRepository,
-        market_service: MarketService
+        watchlist_repo: WatchlistRepository
     ):
         self.repo = repo
         self.watchlist_repo = watchlist_repo
-        self.market_service = market_service
 
     async def _get_owned_watchlist(self, user_id: int, watchlist_id: UUID):
         """Reusable ownership guard — raises if missing or unauthorized."""
@@ -40,10 +37,6 @@ class WatchlistItemService:
             count = await self.repo.count_items(watchlist_id)
             if count >= WatchlistItemService.MAX_ITEMS:
                 raise BadRequestException("Watchlist item limit reached")
-
-            instrument = await self.market_service.get_instrument(int(data.instrument_id))
-            if not instrument:
-                raise BadRequestException("Invalid instrument")
 
             try:
                 item = await self.repo.add_item(watchlist_id, data)
