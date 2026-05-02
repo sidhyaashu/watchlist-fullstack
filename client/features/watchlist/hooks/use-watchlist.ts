@@ -10,7 +10,7 @@ export function useWatchlist(watchlistId: string | undefined) {
   return useQuery({
     queryKey: watchlistKeys.detail(watchlistId ?? ""),
     queryFn: () => fetchWatchlist(watchlistId!),
-    enabled: !!watchlistId,
+    enabled: !!watchlistId && !watchlistId.startsWith("temp-"),
     staleTime: 10 * 60 * 1000, // 10 min — matches backend DETAIL_TTL
   });
 }

@@ -12,7 +12,7 @@ interface KPIProps {
   sparkline?: React.ReactNode;
 }
 
-const KPI = ({ label, value, subValue, trend, sparkline }: KPIProps) => (
+const KPI = ({ label, value, subValue, trend }: KPIProps) => (
   <div className="glass-card p-5 relative overflow-hidden flex flex-col gap-1.5 transition-all hover:translate-y-[-2px] hover:shadow-xl group">
     <div className="ts-eyebrow text-ink-3">
       {label}
@@ -23,8 +23,19 @@ const KPI = ({ label, value, subValue, trend, sparkline }: KPIProps) => (
     <div className={`ts-body text-[11.5px] font-medium ${trend === "up" ? "text-good" : trend === "down" ? "text-danger" : "text-ink-2"}`}>
       {subValue}
     </div>
-    <div className="absolute right-[-4px] bottom-[-8px] opacity-[0.04] group-hover:opacity-[0.08] transition-opacity">
-      {sparkline || <Activity size={72} />}
+    
+    {/* ── SPARKLINE OVERLAY ── */}
+    <div className="absolute right-[-10px] bottom-[-5px] w-32 h-16 pointer-events-none opacity-[0.12] group-hover:opacity-20 transition-opacity">
+      <svg width="100%" height="100%" viewBox="0 0 100 40" preserveAspectRatio="none" className={trend === "up" ? "text-good" : trend === "down" ? "text-danger" : "text-accent"}>
+        <path 
+          d={trend === "up" ? "M0 35 L20 28 L40 32 L60 15 L80 18 L100 5" : trend === "down" ? "M0 5 L20 15 L40 12 L60 28 L80 25 L100 35" : "M0 20 L20 22 L40 18 L60 21 L80 19 L100 20"} 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="3.5" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+        />
+      </svg>
     </div>
   </div>
 );
@@ -52,14 +63,12 @@ export const WatchlistKPIs = ({ items }: { items: WatchlistItem[] }) => {
         label="Tracked Assets" 
         value={trackedCount} 
         subValue={<span>instruments in list</span>} 
-        sparkline={<Eye size={84} className="text-accent" />}
       />
       <KPI 
         label="Day's Avg Move" 
         value={<Numeric value={avgMove} type="percent" showPlus />} 
         subValue={<span className="ts-mono">{advancingCount} advancing today</span>} 
         trend={avgMove >= 0 ? "up" : "down"}
-        sparkline={<Activity size={84} className={avgMove >= 0 ? "text-good" : "text-danger"} />}
       />
       {bestStock ? (
         <KPI 
@@ -75,7 +84,6 @@ export const WatchlistKPIs = ({ items }: { items: WatchlistItem[] }) => {
             </div>
           } 
           trend={(bestStock.change_percent || 0) >= 0 ? "up" : "down"}
-          sparkline={<TrendingUp size={84} className="text-good" />}
         />
       ) : (
         <KPI label="Top Performer" value="—" subValue="No assets found" />
@@ -94,7 +102,6 @@ export const WatchlistKPIs = ({ items }: { items: WatchlistItem[] }) => {
             </div>
           } 
           trend={(worstStock.change_percent || 0) >= 0 ? "up" : "down"}
-          sparkline={<TrendingDown size={84} className="text-danger" />}
         />
       ) : (
         <KPI label="Bottom Performer" value="—" subValue="No assets found" />

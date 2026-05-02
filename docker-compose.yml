@@ -52,7 +52,7 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:password@db:5432/investcode
+      - DATABASE_URL=postgresql+asyncpg://InvestKode:Xpolog%4000%26@finglobalai-data-dum.postgres.database.azure.com:5432/financial_db?ssl=require
       - REDIS_URL=redis://investcode_redis:6379/0
       - BEHIND_GATEWAY=true   # Gateway owns CORS; auth service skips its own middleware
     depends_on:
@@ -82,7 +82,8 @@ services:
     env_file:
       - .env
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:password@db:5432/investcode
+      - DATABASE_URL=postgresql+asyncpg://InvestKode:Xpolog%4000%26@finglobalai-data-dum.postgres.database.azure.com:5432/financial_db?ssl=require
+      - MARKET_DATABASE_URL=postgresql+asyncpg://InvestKode:Xpolog%4000%26@finglobalai-data-dum.postgres.database.azure.com:5432/financial_db?ssl=require
       - REDIS_URL=redis://investcode_redis:6379/0
     depends_on:
       db:

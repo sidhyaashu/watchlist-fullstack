@@ -9,7 +9,8 @@ import {
   LayoutDashboard, 
   Settings, 
   Bell,
-  ListEnd
+  ListEnd,
+  Activity
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "../ui/button";
@@ -46,82 +47,86 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar - Desktop */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-slate-200">
-        <div className="p-6 border-b border-slate-100">
-          <Link href="/dashboard">
-            <h1 className="text-xl font-bold text-indigo-600">InvestCode</h1>
-          </Link>
-        </div>
-        <nav className="flex-1 p-4 space-y-1">
-          <Link href="/dashboard" className="flex items-center space-x-3 px-4 py-2 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
-            <LayoutDashboard size={20} />
-            <span>Dashboard</span>
-          </Link>
-          <Link href="/watchlists" className="flex items-center space-x-3 px-4 py-2 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
-            <ListEnd size={20} />
-            <span>Watchlists</span>
-          </Link>
-          <Link href="/profile" className="flex items-center space-x-3 px-4 py-2 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
-            <User size={20} />
-            <span>Profile</span>
-          </Link>
-          <Link href="/profile" className="flex items-center space-x-3 px-4 py-2 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors">
+    <div className="min-h-screen flex items-stretch">
+      {/* ── SIDE RAIL ── */}
+      <aside className="hidden md:flex flex-col items-center w-[var(--side-rail-width)] bg-white/50 backdrop-blur-md border-r border-rule py-4 gap-2 z-30">
+        <Link href="/dashboard" className="w-9 h-9 rounded-xl bg-accent-soft flex items-center justify-center text-accent hover:bg-accent hover:text-white transition-all mb-4">
+          <LayoutDashboard size={20} />
+        </Link>
+        <Link href="/watchlists" className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-white shadow-lg shadow-accent/30 mb-2">
+          <ListEnd size={20} />
+        </Link>
+        <Link href="/dashboard" className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-3 hover:bg-white/70 hover:text-accent transition-all">
+          <Activity size={20} />
+        </Link>
+        
+        <div className="mt-auto flex flex-col gap-2">
+          <Link href="/settings" className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-3 hover:bg-white/70 hover:text-accent transition-all">
             <Settings size={20} />
-            <span>Settings</span>
           </Link>
-        </nav>
-        <div className="p-4 border-t border-slate-100">
-          <Button variant="ghost" className="w-full justify-start text-slate-600 hover:text-red-600 hover:bg-red-50" onClick={logout}>
-            <LogOut size={20} className="mr-3" />
-            Sign Out
+          <Button variant="ghost" size="icon" className="w-9 h-9 text-ink-3 hover:text-danger hover:bg-danger-soft" onClick={logout}>
+            <LogOut size={20} />
           </Button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <header className="bg-white border-b border-slate-200 h-16 flex items-center justify-between px-6 sticky top-0 z-10">
-          <div className="md:hidden">
-             <h1 className="text-xl font-bold text-indigo-600">InvestCode</h1>
-          </div>
-          <div className="hidden md:block">
-            <h2 className="text-sm font-medium text-slate-500">Welcome back, <span className="text-slate-900">{user?.name}</span></h2>
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col min-w-0 bg-transparent">
+        {/* ── TOPBAR ── */}
+        <header className="h-[var(--topbar-height)] border-b border-rule flex items-center justify-between px-6 bg-white/55 backdrop-blur-xl sticky top-0 z-20">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent-2 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-accent/20">i</div>
+              <span className="text-base font-bold text-ink tracking-tight">InvestKaro</span>
+            </div>
+            <div className="h-4 w-px bg-rule mx-1 hidden sm:block" />
+            <span className="ts-eyebrow text-[10px] hidden sm:block">Watchlist</span>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900">
-              <Bell size={20} />
+          <div className="flex items-center gap-3">
+            <div className="hidden lg:flex items-center gap-2">
+              <span className="pill-dot text-[10.5px] px-3 py-1 bg-white/60 border border-rule rounded-full ts-mono flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-good animate-pulse" />
+                MARKET OPEN · NSE
+              </span>
+              <span className="text-[10.5px] px-3 py-1 bg-white/60 border border-rule rounded-full ts-mono">
+                SENSEX <span className="text-good font-bold">+0.42%</span>
+              </span>
+            </div>
+            
+            <Button variant="ghost" size="icon" className="w-8 h-8 text-ink-3 hover:text-accent hover:bg-white/70">
+              <Bell size={18} />
             </Button>
             
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarFallback className="bg-indigo-100 text-indigo-600 font-bold">
+                <Button variant="ghost" className="h-8 p-0 hover:bg-transparent">
+                  <Avatar className="h-8 w-8 border border-white/80 shadow-sm">
+                    <AvatarFallback className="bg-gradient-to-br from-accent-soft to-accent-2/10 text-accent font-bold text-xs">
                       {user?.name?.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
+              <DropdownMenuContent className="w-56 glass-card mt-2" align="end">
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user?.name}</p>
-                    <p className="text-xs leading-none text-slate-500">{user?.email}</p>
+                    <p className="text-sm font-semibold leading-none">{user?.name}</p>
+                    <p className="text-[11px] leading-none text-ink-3">{user?.email}</p>
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">Profile</Link>
+                <DropdownMenuSeparator className="bg-rule" />
+                <DropdownMenuItem className="focus:bg-accent-soft focus:text-accent-deep cursor-pointer ts-body py-2.5">
+                  <User size={16} className="mr-2 opacity-60" />
+                  Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/profile">Settings</Link>
+                <DropdownMenuItem className="focus:bg-accent-soft focus:text-accent-deep cursor-pointer ts-body py-2.5">
+                  <Settings size={16} className="mr-2 opacity-60" />
+                  Settings
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red-600 focus:text-red-600" onClick={logout}>
+                <DropdownMenuSeparator className="bg-rule" />
+                <DropdownMenuItem className="text-danger focus:bg-danger-soft focus:text-danger-deep cursor-pointer ts-body py-2.5" onClick={logout}>
+                  <LogOut size={16} className="mr-2 opacity-60" />
                   Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -129,9 +134,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full">
-          {children}
+        {/* ── PAGE BODY ── */}
+        <main className="flex-1 overflow-auto p-6 md:p-8">
+          <div className="max-w-[1320px] mx-auto w-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>

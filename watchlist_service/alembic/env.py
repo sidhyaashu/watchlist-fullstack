@@ -50,6 +50,7 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         version_table="alembic_version_watchlist",
+        version_table_schema="app",
         include_object=include_object,
     )
 
@@ -57,14 +58,11 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 def do_run_migrations(connection: Connection) -> None:
-    from sqlalchemy import text
-    # Ensure our custom schema exists before running migrations
-    connection.execute(text("CREATE SCHEMA IF NOT EXISTS app"))
-    
     context.configure(
         connection=connection, 
         target_metadata=target_metadata,
         version_table="alembic_version_watchlist",
+        version_table_schema="app",
         include_object=include_object,
     )
 
@@ -80,6 +78,15 @@ async def run_async_migrations() -> None:
         poolclass=pool.NullPool,
     )
 
+    # Step 1: Create the schema in AUTOCOMMIT mode (DDL outside a transaction).
+    # This is required because CREATE SCHEMA cannot run inside a transaction
+    # that also creates tables within the same schema on PostgreSQL/asyncpg.
+    async with connectable.connect() as connection:
+        from sqlalchemy import text
+        await connection.execute(text("CREATE SCHEMA IF NOT EXISTS app"))
+        await connection.commit()
+
+    # Step 2: Run the actual Alembic migrations (creates tables) in a fresh connection.
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
 

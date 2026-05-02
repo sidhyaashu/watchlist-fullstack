@@ -2,6 +2,7 @@ from uuid import UUID
 
 from app.utils.logger import logger
 from app.watchlist.repository.watchlist_repo import WatchlistRepository
+from app.watchlist.repository.watchlist_item_repo import WatchlistItemRepository
 from app.core.exceptions import BadRequestException, NotFoundException, UnauthorizedException
 from app.cache.watchlist_cache import WatchlistCache
 from app.watchlist.schemas.watchlist import WatchlistResponse

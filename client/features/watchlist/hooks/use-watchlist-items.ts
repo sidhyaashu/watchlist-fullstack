@@ -14,7 +14,7 @@ export function useWatchlistItems(
   return useQuery({
     queryKey: watchlistKeys.items(watchlistId ?? "", { skip, limit }),
     queryFn: () => fetchWatchlistItems(watchlistId!, { skip, limit }),
-    enabled: !!watchlistId && enabled,
+    enabled: !!watchlistId && !watchlistId.startsWith("temp-") && enabled,
     staleTime: 60 * 1000, // 1 minute
   });
 }

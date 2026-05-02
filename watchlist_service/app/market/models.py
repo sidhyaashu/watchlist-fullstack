@@ -3,34 +3,33 @@ from app.db.base import Base
 
 
 class CompanyMaster(Base):
-    __tablename__ = "Company_Master"
+    __tablename__ = "company_master"
     __table_args__ = {"schema": "public"}
 
-
-    FINCODE = Column(Integer, primary_key=True, autoincrement=False)
-    SCRIPCODE = Column(Integer)
-    SCRIP_NAME = Column(String(35))
-    SYMBOL = Column(String(20), index=True)
-    COMPNAME = Column(String(255))
+    fincode = Column(Integer, primary_key=True, autoincrement=False)
+    scripcode = Column(Integer)
+    scrip_name = Column(String(35))
+    symbol = Column(String(20), index=True)
+    compname = Column(String(255))
     industry = Column(String(100))
-    ISIN = Column(String(20))
+    isin = Column(String(20))
 
 
 class NseMonthPrice(Base):
-    __tablename__ = "Nse_Monthprice"  # Exact casing from Azure SQL
+    __tablename__ = "nse_monthprice"
 
-    Fincode = Column(Integer, primary_key=True, autoincrement=False)
-    Month = Column(Integer, primary_key=True)
-    Year = Column(Integer, primary_key=True)
+    fincode = Column(Integer, primary_key=True, autoincrement=False)
+    month = Column(Integer, primary_key=True)
+    year = Column(Integer, primary_key=True)
     symbol = Column(String(25))
-    Open = Column(Float)
+    open = Column(Float)
     high = Column(Float)
     low = Column(Float)
-    Close = Column(Float)
-    Volume = Column(Numeric)
+    close = Column(Float)
+    volume = Column(Numeric)
 
     __table_args__ = (
-        PrimaryKeyConstraint("Fincode", "Month", "Year"),
+        PrimaryKeyConstraint("fincode", "month", "year"),
         {"schema": "public"}
     )
 
@@ -40,8 +39,7 @@ class CompanyEquity(Base):
     __table_args__ = {"schema": "public"}
 
     FINCODE = Column(Integer, primary_key=True, autoincrement=False)
-    high = Column(Float)
-    low = Column(Float)
+
 
 
 # Keep the local Instrument model for now if needed, but we'll mostly use the ones above
