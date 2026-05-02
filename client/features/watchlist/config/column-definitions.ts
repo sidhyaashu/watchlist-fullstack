@@ -1,4 +1,4 @@
-export type ColumnId = 'stock' | 'price' | 'change' | 'range' | 'sector' | 'actions';
+export type ColumnId = 'stock' | 'price' | 'change' | 'range' | 'mcap' | 'pe' | 'sector' | 'actions';
 
 export interface WatchlistColumn {
   id: ColumnId;
@@ -16,6 +16,9 @@ export const WATCHLIST_COLUMNS: WatchlistColumn[] = [
   { id: 'price', label: 'Price', align: 'right' },
   { id: 'change', label: 'Day', align: 'right' },
   { id: 'range', label: '52W Range', align: 'center' },
+  { id: 'mcap', label: 'Mkt Cap', align: 'right' },
+  { id: 'pe', label: 'P / E', align: 'right' },
   { id: 'sector', label: 'Sector', align: 'left' },
   { id: 'actions', label: 'Actions', align: 'right', width: '100px' },
 ];
+

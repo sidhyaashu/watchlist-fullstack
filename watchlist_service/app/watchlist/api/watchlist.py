@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.responses import JSONResponse
 from uuid import UUID
 
@@ -42,7 +42,7 @@ async def get_watchlists(
 
     # If the client already has this exact version, skip the body entirely
     if request.headers.get("If-None-Match") == etag:
-        return JSONResponse(status_code=304, content=None, headers={"ETag": etag})
+        return Response(status_code=304, headers={"ETag": etag})
 
     return JSONResponse(
         content=data,
@@ -67,7 +67,7 @@ async def get_watchlist(
     etag = make_etag(data)
 
     if request.headers.get("If-None-Match") == etag:
-        return JSONResponse(status_code=304, content=None, headers={"ETag": etag})
+        return Response(status_code=304, headers={"ETag": etag})
 
     return JSONResponse(
         content=data,
@@ -87,8 +87,7 @@ async def delete_watchlist(
     await handle_service_error(
         service.delete_watchlist(user_id, watchlist_id)
     )
-    return JSONResponse(
-        content=None,
+    return Response(
         status_code=204,
         headers={"Cache-Control": cache_control_no_store()},
     )

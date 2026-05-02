@@ -26,7 +26,17 @@ export interface WatchlistItem {
   sector: string | null;
   year_high: number | null;
   year_low: number | null;
+  mcap: number | null;
+  pe: number | null;
 }
+
+export interface PaginatedWatchlistItems {
+  items: WatchlistItem[];
+  total: number;
+  skip: number;
+  limit: number;
+}
+
 
 
 // ─── Request payloads ─────────────────────────────────────────────────────────
@@ -36,7 +46,7 @@ export interface CreateWatchlistPayload {
 }
 
 export interface AddItemPayload {
-  instrument_id: string;
+  instrument_id: number;
   symbol: string;
   exchange: string;
 }

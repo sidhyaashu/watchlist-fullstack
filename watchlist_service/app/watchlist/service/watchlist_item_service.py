@@ -58,23 +58,31 @@ class WatchlistItemService:
         await WatchlistItemCache.invalidate_items(watchlist_id)
         logger.info(f"[item] removed instrument={instrument_id} watchlist={watchlist_id}")
 
-    async def get_items(self, user_id: int, watchlist_id: UUID, skip: int = 0, limit: int = 50) -> list[WatchlistItemResponse]:
+    async def get_items(self, user_id: int, watchlist_id: UUID, skip: int = 0, limit: int = 50) -> dict:
         limit = min(limit, 100)
 
         # 🔹 Ownership check
         await self._get_owned_watchlist(user_id, watchlist_id)
 
+        # Total count for pagination
+        total = await self.repo.count_items(watchlist_id)
+
         # 🔹 Cache-aside
         cached = await WatchlistItemCache.get_items(watchlist_id, skip, limit)
         if cached is not None:
-            return [WatchlistItemResponse.model_validate(i) for i in cached]
+            return {
+                "items": [WatchlistItemResponse.model_validate(i) for i in cached],
+                "total": total,
+                "skip": skip,
+                "limit": limit
+            }
 
         # 🔥 Single high-performance SQL query joining items + market data
         rows = await self.repo.get_items(watchlist_id, skip, limit)
 
         enriched: list[WatchlistItemResponse] = []
         for row in rows:
-            item, comp_name, symbol, industry, last_price, open_price, year_high, year_low = row
+            item, comp_name, symbol, industry, last_price, open_price, year_high, year_low, mcap, pe = row
             
             resp = WatchlistItemResponse.model_validate(item)
             # Override with fresh market data from JOIN
@@ -96,7 +104,13 @@ class WatchlistItemService:
             if year_low:
                 resp.year_low = year_low
             
+            if mcap:
+                resp.mcap = mcap
+            if pe:
+                resp.pe = pe
+            
             enriched.append(resp)
+
 
 
 
@@ -106,7 +120,12 @@ class WatchlistItemService:
             [r.model_dump() for r in enriched]
         )
 
-        return enriched
+        return {
+            "items": enriched,
+            "total": total,
+            "skip": skip,
+            "limit": limit
+        }
 
 
 

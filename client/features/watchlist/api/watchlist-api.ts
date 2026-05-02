@@ -18,6 +18,7 @@ import type {
   AddItemPayload,
   ReorderPayload,
   WatchlistQueryParams,
+  PaginatedWatchlistItems,
 } from "../types";
 
 const BASE = "/api/v1/watchlists";
@@ -51,9 +52,9 @@ export async function deleteWatchlist(watchlistId: string): Promise<void> {
 export async function fetchWatchlistItems(
   watchlistId: string,
   params: WatchlistQueryParams = {}
-): Promise<WatchlistItem[]> {
-  const { skip = 0, limit = 50 } = params;
-  const { data } = await apiClient.get<WatchlistItem[]>(`${BASE}/${watchlistId}/items`, {
+): Promise<PaginatedWatchlistItems> {
+  const { skip = 0, limit = 10 } = params;
+  const { data } = await apiClient.get<PaginatedWatchlistItems>(`${BASE}/${watchlistId}/items`, {
     params: { skip, limit },
   });
   return data;

@@ -15,6 +15,8 @@ class CompanyMaster(Base):
     isin = Column(String(20))
 
 
+
+
 class NseMonthPrice(Base):
     __tablename__ = "nse_monthprice"
 
@@ -34,8 +36,14 @@ class NseMonthPrice(Base):
     )
 
 
+
+
 class CompanyEquity(Base):
     __tablename__ = "company_equity"
     __table_args__ = {"schema": "public"}
 
-    FINCODE = Column(Integer, primary_key=True, autoincrement=False)
+    fincode = Column(Integer, primary_key=True, autoincrement=False)
+    mcap = Column(Float)
+    ttmpe = Column(Float)
+
+

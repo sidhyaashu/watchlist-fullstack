@@ -5,7 +5,8 @@ from app.api.deps import get_current_user
 from app.watchlist.schemas.watchlist_item import (
     WatchlistItemCreate,
     WatchlistItemResponse,
-    WatchlistItemReorder
+    WatchlistItemReorder,
+    PaginatedWatchlistItems
 )
 from app.watchlist.service.watchlist_item_service import WatchlistItemService
 from app.watchlist.dependencies import get_watchlist_item_service
@@ -26,7 +27,7 @@ async def add_item(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("", response_model=list[WatchlistItemResponse])
+@router.get("", response_model=PaginatedWatchlistItems)
 async def get_items(
     watchlist_id: UUID,
     skip: int = 0,
@@ -51,7 +52,7 @@ async def remove_item(
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.put("/reorder")
+@router.patch("/reorder")
 async def reorder_items(
     watchlist_id: UUID,
     updates: list[WatchlistItemReorder],

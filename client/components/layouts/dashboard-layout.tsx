@@ -10,8 +10,11 @@ import {
   Settings, 
   Bell,
   ListEnd,
-  Activity
+  Activity,
+  Sun,
+  Moon
 } from "lucide-react";
+import { useTheme } from "../providers/theme-provider";
 import Link from "next/link";
 import { Button } from "../ui/button";
 import {
@@ -30,6 +33,7 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, isAuthenticated, isLoading, logout } = useAuth();
+  const { theme, setTheme, resolvedTheme } = useTheme();
   const router = useRouter();
 
   useEffect(() => {
@@ -40,8 +44,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
   if (isLoading || !isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-bg-1">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-accent"></div>
       </div>
     );
   }
@@ -49,22 +53,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen flex items-stretch">
       {/* ── SIDE RAIL ── */}
-      <aside className="hidden md:flex flex-col items-center w-[var(--side-rail-width)] bg-white/50 backdrop-blur-md border-r border-rule py-4 gap-2 z-30">
+      <aside className="hidden md:flex flex-col items-center w-[var(--side-rail-width)] bg-white/40 dark:bg-black/20 backdrop-blur-md border-r border-rule py-4 gap-2 z-30">
         <Link href="/dashboard" className="w-9 h-9 rounded-xl bg-accent-soft flex items-center justify-center text-accent hover:bg-accent hover:text-white transition-all mb-4">
           <LayoutDashboard size={20} />
         </Link>
-        <Link href="/watchlists" className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-white shadow-lg shadow-accent/30 mb-2">
+        <Link href="/watchlists" className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-white dark:text-bg-1 shadow-lg shadow-accent/30 mb-2">
           <ListEnd size={20} />
         </Link>
-        <Link href="/dashboard" className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-3 hover:bg-white/70 hover:text-accent transition-all">
+        <Link href="/dashboard" className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-3 hover:bg-white/70 dark:hover:bg-white/5 hover:text-accent dark:hover:text-white transition-all">
           <Activity size={20} />
         </Link>
         
         <div className="mt-auto flex flex-col gap-2">
-          <Link href="/settings" className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-3 hover:bg-white/70 hover:text-accent transition-all">
+          <Link href="/settings" className="w-9 h-9 rounded-xl flex items-center justify-center text-ink-3 hover:bg-white/70 dark:hover:bg-white/5 hover:text-accent dark:hover:text-white transition-all">
             <Settings size={20} />
           </Link>
-          <Button variant="ghost" size="icon" className="w-9 h-9 text-ink-3 hover:text-danger hover:bg-danger-soft" onClick={logout}>
+          <Button variant="ghost" size="icon" className="w-9 h-9 text-ink-3 hover:text-danger hover:bg-danger-soft dark:hover:bg-danger/10" onClick={logout}>
             <LogOut size={20} />
           </Button>
         </div>
@@ -73,10 +77,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 bg-transparent">
         {/* ── TOPBAR ── */}
-        <header className="h-[var(--topbar-height)] border-b border-rule flex items-center justify-between px-6 bg-white/55 backdrop-blur-xl sticky top-0 z-20">
+        <header className="h-[var(--topbar-height)] border-b border-rule flex items-center justify-between px-6 bg-white/50 dark:bg-black/30 backdrop-blur-xl sticky top-0 z-20">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2.5">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent-2 flex items-center justify-center text-white font-bold text-sm shadow-md shadow-accent/20">i</div>
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-accent to-accent-2 flex items-center justify-center text-white dark:text-bg-1 font-bold text-sm shadow-md shadow-accent/20">i</div>
               <span className="text-base font-bold text-ink tracking-tight">InvestKaro</span>
             </div>
             <div className="h-4 w-px bg-rule mx-1 hidden sm:block" />
@@ -85,16 +89,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           
           <div className="flex items-center gap-3">
             <div className="hidden lg:flex items-center gap-2">
-              <span className="pill-dot text-[10.5px] px-3 py-1 bg-white/60 border border-rule rounded-full ts-mono flex items-center gap-1.5">
+              <span className="pill-dot text-[10.5px] px-3 py-1 bg-white/40 dark:bg-white/5 border border-rule rounded-full ts-mono flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-good animate-pulse" />
                 MARKET OPEN · NSE
               </span>
-              <span className="text-[10.5px] px-3 py-1 bg-white/60 border border-rule rounded-full ts-mono">
+              <span className="text-[10.5px] px-3 py-1 bg-white/40 dark:bg-white/5 border border-rule rounded-full ts-mono">
                 SENSEX <span className="text-good font-bold">+0.42%</span>
               </span>
             </div>
             
-            <Button variant="ghost" size="icon" className="w-8 h-8 text-ink-3 hover:text-accent hover:bg-white/70">
+            <button 
+              className="theme-toggle" 
+              onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}
+              title="Toggle theme"
+            >
+              {resolvedTheme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+
+            <Button variant="ghost" size="icon" className="w-8 h-8 text-ink-3 hover:text-accent hover:bg-white/70 dark:hover:bg-white/5">
               <Bell size={18} />
             </Button>
             

@@ -24,10 +24,13 @@ export { useDeleteWatchlist } from "./hooks/use-delete-watchlist";
 export { useWatchlistItems } from "./hooks/use-watchlist-items";
 export { useAddWatchlistItem } from "./hooks/use-add-watchlist-item";
 export { useRemoveWatchlistItem } from "./hooks/use-remove-watchlist-item";
+export { useReorderWatchlistItems } from "./hooks/use-reorder-watchlist-items";
 
 // Components
 export { InstrumentSearch } from "./components/instrument-search";
 export { WatchlistKPIs } from "./components/watchlist-kpis";
 export { WatchlistItemsTable } from "./components/watchlist-items-table";
 export { PriceRangeBand } from "./components/price-range-band";
+export { WatchlistTabs } from "./components/watchlist-tabs";
+export type { WatchlistTag } from "./components/watchlist-tabs";
 

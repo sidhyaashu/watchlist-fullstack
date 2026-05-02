@@ -73,11 +73,11 @@ class WatchlistService:
         wl = await self.repo.create(user_id, "Core Bluechips")
         
         if self.item_repo:
-            # Reliance: 11, TCS: 13, HDFCBANK: 15
+            # Reliance: 100325, TCS: 132540, HDFCBANK: 100180
             seeds = [
-                {"fincode": 11, "symbol": "RELIANCE", "exchange": "NSE"},
-                {"fincode": 13, "symbol": "TCS", "exchange": "NSE"},
-                {"fincode": 15, "symbol": "HDFCBANK", "exchange": "NSE"}
+                {"fincode": 100325, "symbol": "RELIANCE", "exchange": "NSE"},
+                {"fincode": 132540, "symbol": "TCS", "exchange": "NSE"},
+                {"fincode": 100180, "symbol": "HDFCBANK", "exchange": "NSE"}
             ]
             for s in seeds:
                 item = WatchlistItem(

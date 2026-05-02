@@ -55,6 +55,8 @@ function AuthInitializer({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+import { ThemeProvider } from "./theme-provider";
+
 export function RootProvider({ children }: RootProviderProps) {
   const [queryClient] = useState(
     () =>
@@ -72,24 +74,26 @@ export function RootProvider({ children }: RootProviderProps) {
   return (
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <NextTopLoader
-          color="#4f46e5"
-          initialPosition={0.08}
-          crawlSpeed={200}
-          height={3}
-          crawl={true}
-          showSpinner={false}
-          easing="ease"
-          speed={200}
-          shadow="0 0 10px #4f46e5,0 0 5px #4f46e5"
-        />
-        <Suspense fallback={null}>
-          <QueryTokenHandler />
-        </Suspense>
-        <AuthInitializer>
-          {children}
-        </AuthInitializer>
-        <Toaster richColors position="top-right" closeButton />
+        <ThemeProvider>
+          <NextTopLoader
+            color="var(--accent)"
+            initialPosition={0.08}
+            crawlSpeed={200}
+            height={3}
+            crawl={true}
+            showSpinner={false}
+            easing="ease"
+            speed={200}
+            shadow="0 0 10px var(--accent),0 0 5px var(--accent)"
+          />
+          <Suspense fallback={null}>
+            <QueryTokenHandler />
+          </Suspense>
+          <AuthInitializer>
+            {children}
+          </AuthInitializer>
+          <Toaster richColors position="top-right" closeButton />
+        </ThemeProvider>
       </QueryClientProvider>
     </Provider>
   );

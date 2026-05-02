@@ -1,42 +1,30 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Eye, Activity } from "lucide-react";
 import { WatchlistItem } from "../types";
 import { Numeric } from "@/components/ui/numeric";
 
 interface KPIProps {
   label: string;
-  value: string | number;
+  value: React.ReactNode;
   subValue: React.ReactNode;
   trend?: "up" | "down";
-  sparkline?: React.ReactNode;
+  sparkPath?: string;
+  sparkColor?: string;
 }
 
-const KPI = ({ label, value, subValue, trend }: KPIProps) => (
-  <div className="glass-card p-5 relative overflow-hidden flex flex-col gap-1.5 transition-all hover:translate-y-[-2px] hover:shadow-xl group">
-    <div className="ts-eyebrow text-ink-3">
-      {label}
-    </div>
-    <div className="ts-mono text-2xl font-bold text-ink tracking-tight flex items-baseline gap-1">
-      {typeof value === 'number' ? <Numeric value={value} precision={0} /> : value}
-    </div>
-    <div className={`ts-body text-[11.5px] font-medium ${trend === "up" ? "text-good" : trend === "down" ? "text-danger" : "text-ink-2"}`}>
+const KPI = ({ label, value, subValue, trend, sparkPath, sparkColor }: KPIProps) => (
+  <div className="kpi">
+    <div className="lab">{label}</div>
+    <div className="v">{value}</div>
+    <div className={`d ${trend === "up" ? "up" : trend === "down" ? "dn" : ""}`}>
       {subValue}
     </div>
     
-    {/* ── SPARKLINE OVERLAY ── */}
-    <div className="absolute right-[-10px] bottom-[-5px] w-32 h-16 pointer-events-none opacity-[0.12] group-hover:opacity-20 transition-opacity">
-      <svg width="100%" height="100%" viewBox="0 0 100 40" preserveAspectRatio="none" className={trend === "up" ? "text-good" : trend === "down" ? "text-danger" : "text-accent"}>
-        <path 
-          d={trend === "up" ? "M0 35 L20 28 L40 32 L60 15 L80 18 L100 5" : trend === "down" ? "M0 5 L20 15 L40 12 L60 28 L80 25 L100 35" : "M0 20 L20 22 L40 18 L60 21 L80 19 L100 20"} 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="3.5" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        />
+    {sparkPath && (
+      <svg className="spark" viewBox="0 0 64 24" fill="none" stroke={sparkColor || "currentColor"} strokeWidth="1.5" strokeLinecap="round">
+        <polyline points={sparkPath} />
       </svg>
-    </div>
+    )}
   </div>
 );
 
@@ -50,64 +38,53 @@ export const WatchlistKPIs = ({ items }: { items: WatchlistItem[] }) => {
   const worstStock = items.length > 0 
     ? [...items].sort((a, b) => (a.change_percent || 0) - (b.change_percent || 0))[0]
     : null;
- 
+  
   const avgMove = items.length > 0
     ? items.reduce((acc, curr) => acc + (curr.change_percent || 0), 0) / items.length
     : 0;
- 
+  
   const advancingCount = items.filter(i => (i.change_percent || 0) > 0).length;
- 
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="kpis">
       <KPI 
-        label="Tracked Assets" 
-        value={trackedCount} 
-        subValue={<span>instruments in list</span>} 
+        label="Tracked" 
+        value={<>{trackedCount}</>} 
+        subValue={<>across <span>1 list</span></>}
+        sparkPath="0,18 10,14 18,16 26,10 34,12 42,6 50,9 58,4 64,7"
+        sparkColor="#2B6BFF"
       />
       <KPI 
-        label="Day's Avg Move" 
-        value={<Numeric value={avgMove} type="percent" showPlus />} 
-        subValue={<span className="ts-mono">{advancingCount} advancing today</span>} 
+        label="Day's avg move" 
+        value={<><span style={{ color: avgMove >= 0 ? "var(--good)" : "var(--danger-deep)" }}>{avgMove >= 0 ? "+" : ""}<Numeric value={avgMove} precision={2} /></span><small>%</small></>} 
+        subValue={<>{avgMove >= 0 ? "↑" : "↓"} {advancingCount} of {trackedCount} advancing</>} 
         trend={avgMove >= 0 ? "up" : "down"}
+        sparkPath={avgMove >= 0 
+          ? "0,16 10,15 18,12 26,13 34,9 42,11 50,8 58,6 64,4"
+          : "0,4 10,5 18,8 26,7 34,11 42,9 50,12 58,14 64,16"
+        }
+        sparkColor={avgMove >= 0 ? "#10A37F" : "#E2557A"}
       />
       {bestStock ? (
         <KPI 
-          label="Top Performer" 
-          value={bestStock.symbol} 
-          subValue={
-            <div className="flex items-center gap-1.5">
-              <span className="text-good font-bold">
-                <Numeric value={bestStock.change_percent || 0} type="percent" showPlus />
-              </span>
-              <span className="opacity-40">·</span>
-              <Numeric value={bestStock.last_price || 0} type="currency" />
-            </div>
-          } 
-          trend={(bestStock.change_percent || 0) >= 0 ? "up" : "down"}
+          label="Best today" 
+          value={<>{bestStock.name?.split(' ')[0] || bestStock.symbol} <small style={{ fontFamily: "var(--mono)", fontSize: "11px", color: "var(--ink-3)", fontWeight: 500, marginLeft: "4px" }}>{bestStock.symbol}</small></>} 
+          subValue={<>+{<Numeric value={bestStock.change_percent || 0} precision={2} />}% · ₹<Numeric value={bestStock.last_price || 0} precision={2} /></>} 
+          trend="up"
         />
       ) : (
-        <KPI label="Top Performer" value="—" subValue="No assets found" />
+        <KPI label="Best today" value="—" subValue="No data" />
       )}
       {worstStock ? (
         <KPI 
-          label="Bottom Performer" 
-          value={worstStock.symbol} 
-          subValue={
-            <div className="flex items-center gap-1.5">
-              <span className="text-danger font-bold">
-                <Numeric value={worstStock.change_percent || 0} type="percent" showPlus />
-              </span>
-              <span className="opacity-40">·</span>
-              <Numeric value={worstStock.last_price || 0} type="currency" />
-            </div>
-          } 
-          trend={(worstStock.change_percent || 0) >= 0 ? "up" : "down"}
+          label="Worst today" 
+          value={<>{worstStock.name?.split(' ')[0] || worstStock.symbol} <small style={{ fontFamily: "var(--mono)", fontSize: "11px", color: "var(--ink-3)", fontWeight: 500, marginLeft: "4px" }}>{worstStock.symbol}</small></>} 
+          subValue={<>−{<Numeric value={Math.abs(worstStock.change_percent || 0)} precision={2} />}% · ₹<Numeric value={worstStock.last_price || 0} precision={2} /></>} 
+          trend="down"
         />
       ) : (
-        <KPI label="Bottom Performer" value="—" subValue="No assets found" />
+        <KPI label="Worst today" value="—" subValue="No data" />
       )}
     </div>
   );
 };
-
-

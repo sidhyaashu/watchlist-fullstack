@@ -33,7 +33,7 @@ class WatchlistItemRepository:
         Fetches watchlist items enriched with market data in a single SQL query.
         Calculates 52W range by aggregating historical NseMonthPrice data.
         """
-        from app.market.models import CompanyMaster, NseMonthPrice
+        from app.market.models import CompanyMaster, NseMonthPrice, CompanyEquity
         from sqlalchemy import and_
 
         # 1. Subquery to identify the latest price record (Year/Month) per fincode
@@ -46,6 +46,8 @@ class WatchlistItemRepository:
             .subquery()
         )
 
+
+
         # 2. Subquery to calculate the historical High and Low (52W Range)
         range_sub = (
             select(
@@ -57,17 +59,21 @@ class WatchlistItemRepository:
             .subquery()
         )
 
-        # 3. Main query joining items -> company info -> latest price -> high/low range
+
+
+        # 3. Main query joining items -> company info -> latest price -> high/low range -> equity data
         query = (
             select(
                 WatchlistItem,
-                CompanyMaster.compname,
-                CompanyMaster.symbol,
+                CompanyMaster.compname.label("compname"),
+                CompanyMaster.symbol.label("symbol"),
                 CompanyMaster.industry,
                 NseMonthPrice.close.label("last_price"),
                 NseMonthPrice.open.label("open_price"),
                 range_sub.c.year_high,
-                range_sub.c.year_low
+                range_sub.c.year_low,
+                CompanyEquity.mcap.label("mcap"),
+                CompanyEquity.ttmpe.label("pe")
             )
             .outerjoin(CompanyMaster, WatchlistItem.instrument_id == CompanyMaster.fincode)
             .outerjoin(latest_price_sub, WatchlistItem.instrument_id == latest_price_sub.c.fincode)
@@ -79,11 +85,15 @@ class WatchlistItemRepository:
                 )
             )
             .outerjoin(range_sub, WatchlistItem.instrument_id == range_sub.c.fincode)
+            .outerjoin(CompanyEquity, WatchlistItem.instrument_id == CompanyEquity.fincode)
             .where(WatchlistItem.watchlist_id == watchlist_id)
+
+
             .order_by(WatchlistItem.position.asc())
             .offset(skip)
             .limit(limit)
         )
+
 
         result = await self.db.execute(query)
         return result.all()

@@ -83,7 +83,7 @@ async def forward_request(
         )
 
     return Response(
-        content=response.content,
+        content=response.content if response.status_code not in (204, 304) else None,
         status_code=response.status_code,
         headers=dict(response.headers),
     )

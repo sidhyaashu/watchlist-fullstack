@@ -1,5 +1,5 @@
 from sqlalchemy.future import select
-from sqlalchemy import update, delete, func, text
+from sqlalchemy import delete, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
 
@@ -12,8 +12,6 @@ class WatchlistRepository:
         self.db = db
 
     async def acquire_user_lock(self, user_id: int):
-        # PG advisory lock expects a 64-bit bigint. 
-        # Since our user_id is now an integer, we can use it directly.
         query = text("SELECT pg_advisory_xact_lock(:user_id)")
         await self.db.execute(query, {"user_id": user_id})
 

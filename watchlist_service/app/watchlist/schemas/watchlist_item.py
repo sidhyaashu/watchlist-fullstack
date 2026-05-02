@@ -34,10 +34,20 @@ class WatchlistItemResponse(BaseModel):
     sector: Optional[str] = None
     year_high: Optional[float] = None
     year_low: Optional[float] = None
+    mcap: Optional[float] = None
+    pe: Optional[float] = None
+
 
 
     class Config:
         from_attributes = True
+
+class PaginatedWatchlistItems(BaseModel):
+    items: List[WatchlistItemResponse]
+    total: int
+    skip: int
+    limit: int
+
 
 class BulkAddItems(BaseModel):
     items: list[WatchlistItemCreate]

@@ -1,7 +1,9 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 from app.watchlist.api.routes import api_router as watchlist_router
+from app.market.api.routes import api_router as market_router
 from app.core.exceptions import BaseAppException
+
 from app.utils.logger import logger
 
 app = FastAPI(title="Watchlist Service", redirect_slashes=False)
@@ -43,10 +45,10 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 
 # ─── Routes ───────────────────────────────────────────────────────────────────
 
-from app.market.api.routes import api_router as market_router
-
 app.include_router(watchlist_router, prefix="/api/v1")
+
 app.include_router(market_router, prefix="/api/v1")
+
 
 
 @app.get("/health")

@@ -48,8 +48,11 @@ services:
     # NOT exposed to host; only reachable via gateway inside docker network
     expose:
       - "8000"
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'"
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*' --reload"
+    volumes:
+      - ./auth_service:/app
     env_file:
+
       - .env
     environment:
       - DATABASE_URL=postgresql+asyncpg://InvestKode:Xpolog%4000%26@finglobalai-data-dum.postgres.database.azure.com:5432/financial_db?ssl=require
@@ -78,8 +81,11 @@ services:
     # NOT exposed to host; only reachable via gateway inside docker network
     expose:
       - "8003"
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8003 --proxy-headers --forwarded-allow-ips='*'"
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8003 --proxy-headers --forwarded-allow-ips='*' --reload"
+    volumes:
+      - ./watchlist_service:/app
     env_file:
+
       - .env
     environment:
       - DATABASE_URL=postgresql+asyncpg://InvestKode:Xpolog%4000%26@finglobalai-data-dum.postgres.database.azure.com:5432/financial_db?ssl=require
@@ -107,8 +113,11 @@ services:
     restart: always
     expose:
       - "8000"
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*'
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --proxy-headers --forwarded-allow-ips='*' --reload
+    volumes:
+      - ./api_gateway_service:/app
     env_file:
+
       - .env
     environment:
       - REDIS_URL=redis://investcode_redis:6379/0
@@ -154,12 +163,16 @@ services:
     restart: always
     ports:
       - "3000:3000"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:80
     depends_on:
       - api_gateway
     networks:
       - investcode_net
+
 
 # ─── Volumes & Networks ───────────────────────────────────────────
 volumes:

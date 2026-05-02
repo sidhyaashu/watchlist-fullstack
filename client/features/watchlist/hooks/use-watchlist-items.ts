@@ -9,7 +9,7 @@ interface UseWatchlistItemsOptions extends WatchlistQueryParams {
 
 export function useWatchlistItems(
   watchlistId: string | undefined,
-  { skip = 0, limit = 50, enabled = true }: UseWatchlistItemsOptions = {}
+  { skip = 0, limit = 10, enabled = true }: UseWatchlistItemsOptions = {}
 ) {
   return useQuery({
     queryKey: watchlistKeys.items(watchlistId ?? "", { skip, limit }),
